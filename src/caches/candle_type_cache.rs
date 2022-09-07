@@ -1,0 +1,47 @@
+use crate::{CandlesCache, CandleType, CandleModel};
+
+pub struct CandleTypeCache{
+    pub instrument_id: String,
+
+    pub candles_by_minute: CandlesCache,
+    pub candles_by_hour: CandlesCache,
+    pub candles_by_day: CandlesCache,
+    pub candles_by_month: CandlesCache,
+}
+
+impl CandleTypeCache {
+    pub fn new(instrument_id: String) -> Self{
+        Self{
+            instrument_id: instrument_id,
+            candles_by_minute: CandlesCache::new(CandleType::Minute),
+            candles_by_hour: CandlesCache::new(CandleType::Hour),
+            candles_by_day: CandlesCache::new(CandleType::Day),
+            candles_by_month: CandlesCache::new(CandleType::Month),
+        }
+    }
+
+    pub fn init(&mut self, candle: CandleModel, candle_type: CandleType){
+        match candle_type {
+            CandleType::Minute => self.candles_by_minute.init(candle),
+            CandleType::Hour => self.candles_by_hour.init(candle),
+            CandleType::Day => self.candles_by_day.init(candle),
+            CandleType::Month => self.candles_by_month.init(candle),
+        };
+    }
+
+    pub fn get_by_date_range(&self, candle_type: CandleType, date_from: u64, date_to: u64) -> Vec<CandleModel>{
+        match candle_type{
+            CandleType::Minute => self.candles_by_minute.get_by_date_range(date_from, date_to),
+            CandleType::Hour => self.candles_by_hour.get_by_date_range(date_from, date_to),
+            CandleType::Day => self.candles_by_day.get_by_date_range(date_from, date_to),
+            CandleType::Month => self.candles_by_month.get_by_date_range(date_from, date_to),
+        }
+    }
+
+    pub fn handle_new_rate(&mut self, rate: f64, date: u64){
+        self.candles_by_minute.handle_new_rate(date, rate);
+        self.candles_by_hour.handle_new_rate(date, rate);
+        self.candles_by_day.handle_new_rate(date, rate);
+        self.candles_by_month.handle_new_rate(date, rate);
+    }
+}
