@@ -1,6 +1,6 @@
 use super::CandleType;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CandleModel{
     pub open: f64,
     pub close: f64,

@@ -1,5 +1,6 @@
 use crate::{CandlesCache, CandleType, CandleModel};
 
+#[derive(Debug, Clone)]
 pub struct CandleTypeCache{
     pub instrument_id: String,
 

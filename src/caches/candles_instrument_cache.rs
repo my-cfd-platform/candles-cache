@@ -37,9 +37,12 @@ impl CandlesInstrumentsCache {
                     false => bid_ask.ask,
                 };
 
+                println!("target price: {:#?}", bid_ask);
                 match target_instruments_cache {
                     Some(cache) => {
+                        println!("old candles: {:#?}", cache);
                         cache.handle_new_rate(rarget_rate, bid_ask.date);
+                        println!("new candles: {:#?}", cache);
                     },
                     None => {
                         let mut cache = CandleTypeCache::new(bid_ask.instrument.clone());

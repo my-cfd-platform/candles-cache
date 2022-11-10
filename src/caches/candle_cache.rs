@@ -2,6 +2,7 @@ use std::{collections::BTreeMap};
 
 use crate::{CandleType, CandleModel};
 
+#[derive(Debug, Clone)]
 pub struct CandlesCache{
     pub candle_type: CandleType,
     pub candles: BTreeMap<u64, CandleModel>
