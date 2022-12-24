@@ -72,7 +72,7 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    pub async fn get_by_date(
+    pub async fn get_by_date_range(
         &self,
         instument_id: String,
         candle_type: CandleType,
@@ -117,7 +117,7 @@ mod tests {
         cache.update(vec![bid_ask]).await;
 
         let result_bid_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 true,
@@ -126,7 +126,7 @@ mod tests {
             )
             .await;
         let result_ask_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 false,
@@ -136,7 +136,7 @@ mod tests {
             .await;
 
         let result_bid_hour = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Hour,
                 true,
@@ -145,7 +145,7 @@ mod tests {
             )
             .await;
         let result_ask_hour = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Hour,
                 false,
@@ -155,7 +155,7 @@ mod tests {
             .await;
 
         let result_bid_day = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Day,
                 true,
@@ -164,7 +164,7 @@ mod tests {
             )
             .await;
         let result_ask_day = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Day,
                 false,
@@ -174,7 +174,7 @@ mod tests {
             .await;
 
         let result_bid_mount = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Month,
                 true,
@@ -183,7 +183,7 @@ mod tests {
             )
             .await;
         let result_ask_mount = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Month,
                 false,
@@ -229,7 +229,7 @@ mod tests {
         cache.update(vec![bid_ask]).await;
 
         let result_bid_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 true,
@@ -238,7 +238,7 @@ mod tests {
             )
             .await;
         let result_ask_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 false,
@@ -248,7 +248,7 @@ mod tests {
             .await;
 
         let result_bid_hour = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Hour,
                 true,
@@ -257,7 +257,7 @@ mod tests {
             )
             .await;
         let result_ask_hour = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Hour,
                 false,
@@ -267,7 +267,7 @@ mod tests {
             .await;
 
         let result_bid_day = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Day,
                 true,
@@ -276,7 +276,7 @@ mod tests {
             )
             .await;
         let result_ask_day = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Day,
                 false,
@@ -286,7 +286,7 @@ mod tests {
             .await;
 
         let result_bid_mount = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Month,
                 true,
@@ -295,7 +295,7 @@ mod tests {
             )
             .await;
         let result_ask_mount = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Month,
                 false,
@@ -350,7 +350,7 @@ mod tests {
         cache.update(vec![bid_ask]).await;
 
         let result_bid_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 true,
@@ -359,7 +359,7 @@ mod tests {
             )
             .await;
         let result_ask_minute = cache
-            .get_by_date(
+            .get_by_date_range(
                 instument.clone(),
                 crate::models::CandleType::Minute,
                 false,
