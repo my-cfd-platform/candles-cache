@@ -4,10 +4,10 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, IntoPrimitive, TryFromPrimitive)]
 #[repr(i16)]
 pub enum CandleType{
-    Minute = 1,
-    Hour = 2,
-    Day = 3,
-    Month = 4
+    Minute = 0,
+    Hour = 1,
+    Day = 2,
+    Month = 3
 }
 
 impl CandleType{
