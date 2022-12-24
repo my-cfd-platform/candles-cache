@@ -1,5 +1,4 @@
 use std::{collections::BTreeMap};
-
 use crate::{CandleType, CandleModel};
 
 #[derive(Debug, Clone)]

@@ -1,4 +1,8 @@
-#[derive(Debug, Clone)]
+use serde_repr::{Serialize_repr, Deserialize_repr};
+use num_enum::{IntoPrimitive};
+
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, IntoPrimitive)]
+#[repr(i16)]
 pub enum CandleType{
     Minute = 1,
     Hour = 2,

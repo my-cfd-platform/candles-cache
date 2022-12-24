@@ -11,7 +11,6 @@ pub struct CandleModel{
 
 impl CandleModel {
     pub fn new_from_rate(candle_type: CandleType, date: u64, rate: f64) -> Self {
-
         let date = candle_type.format_date_by_type(date);
 
         Self{
