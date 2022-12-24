@@ -80,12 +80,12 @@ impl CandlesInstrumentsCache {
         start_date: u64,
         end_date: u64,
     ) -> Vec<CandleModel> {
-        let mut target_cache = match is_bid {
-            true => self.bid_candles.write().await,
-            false => self.ask_candles.write().await,
+        let target_cache = match is_bid {
+            true => self.bid_candles.read().await,
+            false => self.ask_candles.read().await,
         };
 
-        let instrument_cache = target_cache.get_mut(&instument_id);
+        let instrument_cache = target_cache.get(&instument_id);
 
         match instrument_cache {
             Some(cache) => cache.get_by_date_range(candle_type, start_date, end_date),
