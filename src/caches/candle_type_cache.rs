@@ -49,4 +49,11 @@ impl CandleTypeCache {
         self.candles_by_day.handle_new_rate(date, rate);
         self.candles_by_month.handle_new_rate(date, rate);
     }
+
+    pub fn clear(&mut self) {
+        self.candles_by_day.clear();
+        self.candles_by_hour.clear();
+        self.candles_by_minute.clear();
+        self.candles_by_month.clear();
+    }
 }

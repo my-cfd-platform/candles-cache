@@ -39,5 +39,9 @@ impl CandlesCache {
 
         result
     }
+
+    pub fn clear(&mut self) {
+        self.candles.clear()
+    }
 }
 

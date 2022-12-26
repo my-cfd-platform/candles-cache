@@ -94,6 +94,12 @@ impl CandlesInstrumentsCache {
             }
         }
     }
+
+    pub async fn clear(&mut self) {
+        let mut bids = self.bid_candles.write().await;
+        bids.clear();
+        let mut asks = self.ask_candles.write().await;
+        asks.clear();    }
 }
 
 #[cfg(test)]
