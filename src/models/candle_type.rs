@@ -29,7 +29,7 @@ impl CandleType {
         }
     }
 
-    pub fn get_candle_date(&self, timestamp_sec: i64) -> i64 {
+    pub fn candle_timestamp_sec(&self, timestamp_sec: i64) -> i64 {
         match self {
             CandleType::Minute => timestamp_sec - timestamp_sec % 60,
             CandleType::Hour => timestamp_sec - timestamp_sec % 3600,
