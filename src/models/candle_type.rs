@@ -28,4 +28,20 @@ impl CandleType {
             }
         }
     }
+
+    pub fn get_candle_date(&self, date: i64) -> i64 {
+        match self {
+            CandleType::Minute => date - date % 60,
+            CandleType::Hour => date - date % 3600,
+            CandleType::Day => date - date % 86400,
+            CandleType::Month => {
+                let date = Utc.timestamp_millis_opt(date * 1000).unwrap();
+                let start_of_month: DateTime<Utc> = Utc
+                    .with_ymd_and_hms(date.year(), date.month(), 1, 0, 0, 0)
+                    .unwrap();
+
+                return start_of_month.timestamp();
+            }
+        }
+    }
 }
