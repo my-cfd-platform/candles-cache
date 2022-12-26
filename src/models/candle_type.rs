@@ -1,22 +1,31 @@
-use serde_repr::{Serialize_repr, Deserialize_repr};
+use chrono::{DateTime, Datelike, Utc};
+use chrono::{TimeZone};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, IntoPrimitive, TryFromPrimitive)]
 #[repr(i32)]
-pub enum CandleType{
+pub enum CandleType {
     Minute = 0,
     Hour = 1,
     Day = 2,
-    Month = 3
+    Month = 3,
 }
 
-impl CandleType{
-    pub fn format_date_by_type(&self, date: u64) -> u64{
+impl CandleType {
+    pub fn format_date_by_type(&self, date: u64) -> u64 {
         match self {
             CandleType::Minute => date - date % 60,
             CandleType::Hour => date - date % 3600,
             CandleType::Day => date - date % 86400,
-            CandleType::Month => date - date % 2592000,
+            CandleType::Month => {
+                let date = Utc.timestamp_millis_opt((date * 1000) as i64).unwrap();
+                let start_of_month: DateTime<Utc> = Utc
+                    .with_ymd_and_hms(date.year(), date.month(), 1, 0, 0, 0)
+                    .unwrap();
+
+                return start_of_month.timestamp() as u64;
+            }
         }
     }
 }
