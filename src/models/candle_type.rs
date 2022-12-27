@@ -3,7 +3,7 @@ use chrono::{TimeZone};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, IntoPrimitive, TryFromPrimitive)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, IntoPrimitive, TryFromPrimitive, Hash, Eq, PartialEq)]
 #[repr(i32)]
 pub enum CandleType {
     Minute = 0,
