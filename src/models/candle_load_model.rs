@@ -4,7 +4,7 @@ use crate::{format_date, CandleModel, CandleType};
 
 #[derive(Debug, Clone)]
 pub struct CandleLoadModel {
-    pub insetument: String,
+    pub instrument: String,
     pub candle_type: CandleType,
     pub candle_model: CandleModel,
     pub candle_date: DateTime<Utc>,

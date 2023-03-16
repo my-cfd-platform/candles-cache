@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 
 use chrono::{DateTime, Duration, Utc};
 
-use crate::{format_date, CandleLoadModel, CandleModel, CandleType, RotateSettigns};
+use crate::{format_date, CandleLoadModel, CandleModel, CandleType, RotateSettings};
 
 pub struct CandlesTypesCache {
     pub candles: BTreeMap<u8, CandleDateCache>,
 }
 
 impl CandlesTypesCache {
-    pub fn new(rotate_settings: RotateSettigns) -> Self {
+    pub fn new(rotate_settings: RotateSettings) -> Self {
         Self {
             candles: BTreeMap::from([
                 (
@@ -34,10 +34,10 @@ impl CandlesTypesCache {
                     ),
                 ),
                 (
-                    CandleType::Mounth as u8,
+                    CandleType::Month as u8,
                     CandleDateCache::new(
-                        CandleType::Mounth,
-                        rotate_settings.get_target(&CandleType::Mounth),
+                        CandleType::Month,
+                        rotate_settings.get_target(&CandleType::Month),
                     ),
                 ),
             ]),
@@ -52,10 +52,18 @@ impl CandlesTypesCache {
         date_candle.load(candle);
     }
 
-    pub fn handle_new_price(mut self, price: f64, price_date: DateTime<Utc>) {
+    pub fn handle_new_price(
+        &mut self,
+        price: f64,
+        price_date: DateTime<Utc>,
+    ) -> Vec<(u64, CandleType, CandleModel)> {
+        let mut result = vec![];
         for (_, candle_cache) in self.candles.iter_mut() {
-            candle_cache.handle_price(price, price_date);
+            let to_return = candle_cache.handle_price(price, price_date);
+            result.push(to_return)
         }
+
+        return result;
     }
 
     pub fn get_in_date_range(
@@ -63,12 +71,23 @@ impl CandlesTypesCache {
         date_from: DateTime<Utc>,
         date_to: DateTime<Utc>,
         candle_type: CandleType,
-    ) -> Vec<CandleModel> {
+    ) -> Vec<(u64, CandleModel)> {
         let Some(candle_cache) = self.candles.get(&(candle_type as u8)) else{
             return Vec::new();
         };
 
         return candle_cache.get_in_date_range(date_from, date_to);
+    }
+
+    pub fn get_all_from_cache(&self) -> Vec<(u64, CandleType, CandleModel)> {
+        let mut result = vec![];
+
+        for (_, candle_cache) in &self.candles{
+            let mut candles = candle_cache.get_all_from_cache();
+            result.append(&mut candles)
+        }
+
+        return result;
     }
 }
 
@@ -97,30 +116,47 @@ impl CandleDateCache {
         &self,
         date_from: DateTime<Utc>,
         date_to: DateTime<Utc>,
-    ) -> Vec<CandleModel> {
+    ) -> Vec<(u64, CandleModel)> {
         let mut candles = Vec::new();
 
         let date_from = format_date(date_from, &self.candle_type);
         let date_to = format_date(date_to, &self.candle_type);
 
-        for (_, candle) in self.candles.range(date_from..date_to) {
-            candles.push(candle.clone());
+        for (date, candle) in self.candles.range(date_from..date_to) {
+            candles.push((date.to_owned(), candle.clone()));
         }
 
         return candles;
     }
 
-    pub fn handle_price(&mut self, price: f64, price_date: DateTime<Utc>) {
+    pub fn get_all_from_cache(&self) -> Vec<(u64, CandleType, CandleModel)> {
+        let mut result = vec![];
+
+        for (date, candle) in &self.candles {
+            result.push((date.to_owned(), self.candle_type, candle.clone()))
+        }
+
+        return result;
+    }
+
+    pub fn handle_price(
+        &mut self,
+        price: f64,
+        price_date: DateTime<Utc>,
+    ) -> (u64, CandleType, CandleModel) {
         let date: u64 = format_date(price_date, &self.candle_type);
 
         let Some(candle) = self.candles.get_mut(&date) else{
             let candle = CandleModel::new_from_price(price, 0.0);
-            self.candles.insert(date, candle);
-            return;
+            self.candles.insert(date, candle.clone());
+            return (date, self.candle_type, candle);
         };
 
         candle.update_from_price(price, 0.0);
+        let to_return = candle.clone();
         self.rotate_candles();
+
+        return (date, self.candle_type, to_return);
     }
 
     fn rotate_candles(&mut self) {
