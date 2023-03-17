@@ -41,22 +41,23 @@ mod tests {
 
     #[test]
     fn test() {
-        let date_time = DateTimeAsMicroseconds::now();
+        let date_time =
+            DateTimeAsMicroseconds::parse_iso_string("2021-01-01T10:22:33.000000Z").unwrap();
 
         let d = date_time.format_date(CandleType::Minute);
 
-        println!("{}", d);
+        assert_eq!(202101011022, d);
 
         let d = date_time.format_date(CandleType::Hour);
 
-        println!("{}", d);
+        assert_eq!(202101011000, d);
 
         let d = date_time.format_date(CandleType::Day);
 
-        println!("{}", d);
+        assert_eq!(202101010000, d);
 
         let d = date_time.format_date(CandleType::Month);
 
-        println!("{}", d);
+        assert_eq!(202101000000, d);
     }
 }
