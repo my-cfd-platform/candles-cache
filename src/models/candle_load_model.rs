@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{format_date, CandleModel, CandleType};
 
@@ -7,7 +7,7 @@ pub struct CandleLoadModel {
     pub instrument: String,
     pub candle_type: CandleType,
     pub candle_model: CandleModel,
-    pub candle_date: DateTime<Utc>,
+    pub candle_date: DateTimeAsMicroseconds,
 }
 
 impl CandleLoadModel {

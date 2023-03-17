@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use chrono::{DateTime, Utc};
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
     CandleLoadModel, CandleModel, CandlePersistModel, CandleType, CandlesBidAsk,
@@ -107,8 +107,8 @@ impl CandlesInstrumentsCache {
     pub fn get_in_date_range(
         &self,
         instrument: &str,
-        date_from: DateTime<Utc>,
-        date_to: DateTime<Utc>,
+        date_from: DateTimeAsMicroseconds,
+        date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
         is_bid: bool,
     ) -> Option<Vec<(u64, CandleModel)>> {

@@ -1,8 +1,8 @@
-use chrono::{DateTime, Utc};
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 pub trait CandlesBidAsk {
     fn get_instrument(&self) -> String;
     fn get_bid(&self) -> f64;
     fn get_ask(&self) -> f64;
-    fn get_timestamp(&self) -> DateTime<Utc>;
+    fn get_timestamp(&self) -> DateTimeAsMicroseconds;
 }

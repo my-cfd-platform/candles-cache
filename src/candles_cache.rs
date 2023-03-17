@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, time::Duration};
 
-use chrono::{DateTime, Duration, Utc};
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{format_date, CandleLoadModel, CandleModel, CandleType, RotateSettings};
 
@@ -55,7 +55,7 @@ impl CandlesTypesCache {
     pub fn handle_new_price(
         &mut self,
         price: f64,
-        price_date: DateTime<Utc>,
+        price_date: DateTimeAsMicroseconds,
     ) -> Vec<(u64, CandleType, CandleModel)> {
         let mut result = vec![];
         for (_, candle_cache) in self.candles.iter_mut() {
@@ -68,8 +68,8 @@ impl CandlesTypesCache {
 
     pub fn get_in_date_range(
         &self,
-        date_from: DateTime<Utc>,
-        date_to: DateTime<Utc>,
+        date_from: DateTimeAsMicroseconds,
+        date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
     ) -> Vec<(u64, CandleModel)> {
         let Some(candle_cache) = self.candles.get(&(candle_type as u8)) else{
@@ -82,7 +82,7 @@ impl CandlesTypesCache {
     pub fn get_all_from_cache(&self) -> Vec<(u64, CandleType, CandleModel)> {
         let mut result = vec![];
 
-        for (_, candle_cache) in &self.candles{
+        for (_, candle_cache) in &self.candles {
             let mut candles = candle_cache.get_all_from_cache();
             result.append(&mut candles)
         }
@@ -114,8 +114,8 @@ impl CandleDateCache {
 
     pub fn get_in_date_range(
         &self,
-        date_from: DateTime<Utc>,
-        date_to: DateTime<Utc>,
+        date_from: DateTimeAsMicroseconds,
+        date_to: DateTimeAsMicroseconds,
     ) -> Vec<(u64, CandleModel)> {
         let mut candles = Vec::new();
 
@@ -142,7 +142,7 @@ impl CandleDateCache {
     pub fn handle_price(
         &mut self,
         price: f64,
-        price_date: DateTime<Utc>,
+        price_date: DateTimeAsMicroseconds,
     ) -> (u64, CandleType, CandleModel) {
         let date: u64 = format_date(price_date, &self.candle_type);
 
@@ -172,8 +172,9 @@ impl CandleDateCache {
             return Vec::new();
         };
 
-        let now = Utc::now();
-        let max_possible_date = now - cache_load_duration;
+        let mut max_possible_date = DateTimeAsMicroseconds::now();
+        max_possible_date.add(cache_load_duration);
+
         let key_date = format_date(max_possible_date, &self.candle_type);
         return self
             .candles
