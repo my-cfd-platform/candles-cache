@@ -183,3 +183,43 @@ impl CandleDateCache {
             .collect();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rust_extensions::date_time::DateTimeAsMicroseconds;
+
+    use crate::CandleDateCache;
+
+    #[test]
+    fn test() {
+        let mut cache = CandleDateCache::new(crate::CandleType::Day, None);
+
+        let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
+
+        cache.handle_price(0.55, now);
+
+        let mut from = now;
+        let mut to = now;
+
+        from.add_days(-1);
+
+        to.add_days(1);
+
+        let a = cache.get_in_date_range(from, to);
+
+        let r = a.get(0).unwrap();
+
+        assert_eq!(201501010000, r.0);
+
+        let mut from = now;
+        let mut to = now;
+
+        from.add_days(1);
+
+        to.add_days(2);
+
+        let a = cache.get_in_date_range(from, to);
+
+        assert_eq!(0, a.len())
+    }
+}
