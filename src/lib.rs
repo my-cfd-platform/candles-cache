@@ -14,15 +14,21 @@ pub use settings::*;
 
 pub use models::*;
 
-pub fn format_date(date: DateTimeAsMicroseconds, candle_type: &CandleType) -> u64 {
-    let format = match candle_type {
-        CandleType::Minute => "%Y%m%d%H%M",
-        CandleType::Hour => "%Y%m%d%H",
-        CandleType::Day => "%Y%m%d",
-        CandleType::Month => "%Y%m",
-    };
+pub trait CandleDateTimeKey {
+    fn format_date(&self, candle_type: CandleType) -> u64;
+}
 
-    let date = format!("{:0<12}", date.to_chrono_utc().format(format));
+impl CandleDateTimeKey for DateTimeAsMicroseconds {
+    fn format_date(&self, candle_type: CandleType) -> u64 {
+        let format = match candle_type {
+            CandleType::Minute => "%Y%m%d%H%M",
+            CandleType::Hour => "%Y%m%d%H",
+            CandleType::Day => "%Y%m%d",
+            CandleType::Month => "%Y%m",
+        };
 
-    return date.to_string().parse().unwrap();
+        let date = format!("{:0<12}", self.to_chrono_utc().format(format));
+
+        return date.to_string().parse().unwrap();
+    }
 }

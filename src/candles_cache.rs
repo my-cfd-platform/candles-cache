@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, time::Duration};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{format_date, CandleLoadModel, CandleModel, CandleType, RotateSettings};
+use crate::{CandleDateTimeKey, CandleLoadModel, CandleModel, CandleType, RotateSettings};
 
 pub struct CandlesTypesCache {
     pub candles: BTreeMap<u8, CandleDateCache>,
@@ -119,8 +119,8 @@ impl CandleDateCache {
     ) -> Vec<(u64, CandleModel)> {
         let mut candles = Vec::new();
 
-        let date_from = format_date(date_from, &self.candle_type);
-        let date_to = format_date(date_to, &self.candle_type);
+        let date_from = date_from.format_date(self.candle_type);
+        let date_to = date_to.format_date(self.candle_type);
 
         for (date, candle) in self.candles.range(date_from..date_to) {
             candles.push((date.to_owned(), candle.clone()));
@@ -144,7 +144,7 @@ impl CandleDateCache {
         price: f64,
         price_date: DateTimeAsMicroseconds,
     ) -> (u64, CandleType, CandleModel) {
-        let date: u64 = format_date(price_date, &self.candle_type);
+        let date: u64 = price_date.format_date(self.candle_type);
 
         let Some(candle) = self.candles.get_mut(&date) else{
             let candle = CandleModel::new_from_price(price, 0.0);
@@ -175,7 +175,7 @@ impl CandleDateCache {
         let mut max_possible_date = DateTimeAsMicroseconds::now();
         max_possible_date.add(cache_load_duration);
 
-        let key_date = format_date(max_possible_date, &self.candle_type);
+        let key_date = max_possible_date.format_date(self.candle_type);
         return self
             .candles
             .range(..key_date)
