@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use tokio::sync::RwLock;
 
-use crate::CandlePersistModel;
+use crate::{CandleDateKey, CandlePersistModel};
 
 pub struct CandlesPersistCache {
-    pub to_persist: RwLock<HashMap<String, HashMap<u64, CandlePersistModel>>>,
+    pub to_persist: RwLock<HashMap<String, HashMap<CandleDateKey, CandlePersistModel>>>,
 }
 
 impl CandlesPersistCache {

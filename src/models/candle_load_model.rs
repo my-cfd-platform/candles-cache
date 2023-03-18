@@ -1,18 +1,16 @@
-use rust_extensions::date_time::DateTimeAsMicroseconds;
-
-use crate::{CandleDateTimeKey, CandleModel, CandleType};
+use crate::{CandleDateKey, CandleModel, CandleType};
 
 #[derive(Debug, Clone)]
 pub struct CandleLoadModel {
     pub instrument: String,
     pub candle_type: CandleType,
     pub candle_model: CandleModel,
-    pub candle_date: DateTimeAsMicroseconds,
+    pub candle_date: CandleDateKey,
 }
 
 impl CandleLoadModel {
-    pub fn get_formatted_date(&self) -> u64 {
-        return self.candle_date.format_date(self.candle_type);
+    pub fn get_candle_date_key(&self) -> CandleDateKey {
+        return self.candle_date;
     }
 }
 

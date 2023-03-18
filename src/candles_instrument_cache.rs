@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleLoadModel, CandleModel, CandlePersistModel, CandleResult, CandleType, CandlesBidAsk,
-    CandlesPersistCache, CandlesTypesCache, RotateSettings,
+    CandleDateKey, CandleLoadModel, CandleModel, CandlePersistModel, CandleResult, CandleType,
+    CandlesBidAsk, CandlesPersistCache, CandlesTypesCache, RotateSettings,
 };
 
 pub struct CandlesInstrumentsCache {
@@ -111,7 +111,7 @@ impl CandlesInstrumentsCache {
         date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
         is_bid: bool,
-    ) -> Option<Vec<(u64, CandleModel)>> {
+    ) -> Option<Vec<(CandleDateKey, CandleModel)>> {
         let mut result = None;
         match is_bid {
             true => {

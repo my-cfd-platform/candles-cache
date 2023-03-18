@@ -2,11 +2,11 @@ use std::{collections::BTreeMap, time::Duration};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{CandleDateTimeKey, CandleLoadModel, CandleModel, CandleType, RotateSettings};
+use crate::{ CandleLoadModel, CandleModel, CandleType, RotateSettings, CandleDateKey, GetCandleDateKey};
 
 #[derive(Debug, Clone)]
 pub struct CandleResult {
-    pub date: u64,
+    pub date: CandleDateKey,
     pub candles_type: CandleType,
     pub candle: CandleModel,
 }
@@ -78,7 +78,7 @@ impl CandlesTypesCache {
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
-    ) -> Vec<(u64, CandleModel)> {
+    ) -> Vec<(CandleDateKey, CandleModel)> {
         let Some(candle_cache) = self.candles.get(&(candle_type.to_u8())) else{
             return Vec::new();
         };
@@ -99,7 +99,7 @@ impl CandlesTypesCache {
 }
 
 pub struct CandleDateCache {
-    pub candles: BTreeMap<u64, CandleModel>,
+    pub candles: BTreeMap<CandleDateKey, CandleModel>,
     pub candle_type: CandleType,
     pub rotate_period: Option<Duration>,
 }
@@ -114,7 +114,7 @@ impl CandleDateCache {
     }
 
     pub fn load(&mut self, candle_to_load: CandleLoadModel) {
-        let date_index = candle_to_load.get_formatted_date();
+        let date_index = candle_to_load.get_candle_date_key();
         let model: CandleModel = candle_to_load.into();
         self.candles.insert(date_index, model);
     }
@@ -123,7 +123,7 @@ impl CandleDateCache {
         &self,
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
-    ) -> Vec<(u64, CandleModel)> {
+    ) -> Vec<(CandleDateKey, CandleModel)> {
         println!(
             "Requesting candles from cache {}-{}. Candles has {} elements ",
             date_from.to_rfc3339(),
@@ -133,8 +133,8 @@ impl CandleDateCache {
 
         let mut candles = Vec::new();
 
-        let date_from = date_from.format_date(self.candle_type);
-        let date_to = date_to.format_date(self.candle_type);
+        let date_from = date_from.into_candle_date_key(self.candle_type);
+        let date_to = date_to.into_candle_date_key(self.candle_type);
 
         for (date, candle) in self.candles.range(date_from..date_to) {
             candles.push((date.to_owned(), candle.clone()));
@@ -158,7 +158,7 @@ impl CandleDateCache {
     }
 
     pub fn handle_price(&mut self, price: f64, price_date: DateTimeAsMicroseconds) -> CandleResult {
-        let date: u64 = price_date.format_date(self.candle_type);
+        let date: CandleDateKey = price_date.into_candle_date_key(self.candle_type);
 
         let Some(candle) = self.candles.get_mut(&date) else{
             let candle = CandleModel::new_from_price(price, 0.0);
@@ -189,7 +189,7 @@ impl CandleDateCache {
         }
     }
 
-    fn get_candles_ids_to_rotate(&self) -> Vec<u64> {
+    fn get_candles_ids_to_rotate(&self) -> Vec<CandleDateKey> {
         let Some(cache_load_duration) = self.rotate_period else{
             return Vec::new();
         };
@@ -197,7 +197,7 @@ impl CandleDateCache {
         let mut max_possible_date = DateTimeAsMicroseconds::now();
         max_possible_date.add(cache_load_duration);
 
-        let key_date = max_possible_date.format_date(self.candle_type);
+        let key_date = max_possible_date.into_candle_date_key(self.candle_type);
         return self
             .candles
             .range(..key_date)
@@ -231,7 +231,7 @@ mod tests {
 
         let r = a.get(0).unwrap();
 
-        assert_eq!(201501010000, r.0);
+        assert_eq!(201501010000, r.0.get_value());
 
         let mut from = now;
         let mut to = now;
