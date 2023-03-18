@@ -4,6 +4,12 @@ use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{CandleDateTimeKey, CandleLoadModel, CandleModel, CandleType, RotateSettings};
 
+pub struct CandleResult {
+    pub date: u64,
+    pub candles_type: CandleType,
+    pub candle: CandleModel,
+}
+
 pub struct CandlesTypesCache {
     pub candles: BTreeMap<u8, CandleDateCache>,
 }
@@ -56,7 +62,7 @@ impl CandlesTypesCache {
         &mut self,
         price: f64,
         price_date: DateTimeAsMicroseconds,
-    ) -> Vec<(u64, CandleType, CandleModel)> {
+    ) -> Vec<CandleResult> {
         let mut result = vec![];
         for (_, candle_cache) in self.candles.iter_mut() {
             let to_return = candle_cache.handle_price(price, price_date);
@@ -146,24 +152,28 @@ impl CandleDateCache {
         return result;
     }
 
-    pub fn handle_price(
-        &mut self,
-        price: f64,
-        price_date: DateTimeAsMicroseconds,
-    ) -> (u64, CandleType, CandleModel) {
+    pub fn handle_price(&mut self, price: f64, price_date: DateTimeAsMicroseconds) -> CandleResult {
         let date: u64 = price_date.format_date(self.candle_type);
 
         let Some(candle) = self.candles.get_mut(&date) else{
             let candle = CandleModel::new_from_price(price, 0.0);
             self.candles.insert(date, candle.clone());
-            return (date, self.candle_type, candle);
+            return CandleResult{
+                date,
+                candles_type: self.candle_type,
+                candle: candle.clone()
+            }   
         };
 
         candle.update_from_price(price, 0.0);
         let to_return = candle.clone();
         self.rotate_candles();
 
-        return (date, self.candle_type, to_return);
+         CandleResult{
+            date,
+            candles_type: self.candle_type,
+            candle: to_return
+        }   
     }
 
     fn rotate_candles(&mut self) {

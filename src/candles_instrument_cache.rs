@@ -35,17 +35,17 @@ impl CandlesInstrumentsCache {
         let bids_to_persist =
             bids_cache.handle_new_price(bid_ask.get_bid(), bid_ask.get_timestamp());
 
-        for (date, candle_type, candle) in bids_to_persist {
+        for candle_result in bids_to_persist {
             self.bids_persist_cache
                 .handle_candle(CandlePersistModel {
                     instrument: bid_ask.get_instrument(),
-                    high: candle.high,
-                    low: candle.low,
-                    open: candle.open,
-                    close: candle.close,
-                    volume: candle.volume,
-                    date: date.clone(),
-                    candle_type,
+                    high: candle_result.candle.high,
+                    low: candle_result.candle.low,
+                    open: candle_result.candle.open,
+                    close: candle_result.candle.close,
+                    volume: candle_result.candle.volume,
+                    date: candle_result.date.clone(),
+                    candle_type: candle_result.candles_type,
                 })
                 .await;
         }
@@ -58,17 +58,17 @@ impl CandlesInstrumentsCache {
         let asks_to_persist =
             asks_cache.handle_new_price(bid_ask.get_bid(), bid_ask.get_timestamp());
 
-        for (date, candle_type, candle) in asks_to_persist {
+        for candle_result in asks_to_persist {
             self.asks_persist_cache
                 .handle_candle(CandlePersistModel {
                     instrument: bid_ask.get_instrument(),
-                    high: candle.high,
-                    low: candle.low,
-                    open: candle.open,
-                    close: candle.close,
-                    volume: candle.volume,
-                    date: date.clone(),
-                    candle_type,
+                    high: candle_result.candle.high,
+                    low: candle_result.candle.low,
+                    open: candle_result.candle.open,
+                    close: candle_result.candle.close,
+                    volume: candle_result.candle.volume,
+                    date: candle_result.date.clone(),
+                    candle_type: candle_result.candles_type,
                 })
                 .await;
         }
