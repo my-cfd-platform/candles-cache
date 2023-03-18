@@ -2,7 +2,9 @@ use std::{collections::BTreeMap, time::Duration};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{ CandleLoadModel, CandleModel, CandleType, RotateSettings, CandleDateKey, GetCandleDateKey};
+use crate::{
+    CandleDateKey, CandleLoadModel, CandleModel, CandleType, GetCandleDateKey, RotateSettings,
+};
 
 #[derive(Debug, Clone)]
 pub struct CandleResult {
@@ -147,7 +149,7 @@ impl CandleDateCache {
         let mut result = vec![];
 
         for (date, candle) in &self.candles {
-            result.push(CandleResult{
+            result.push(CandleResult {
                 date: *date,
                 candles_type: self.candle_type,
                 candle: candle.clone(),
@@ -160,49 +162,51 @@ impl CandleDateCache {
     pub fn handle_price(&mut self, price: f64, price_date: DateTimeAsMicroseconds) -> CandleResult {
         let date: CandleDateKey = price_date.into_candle_date_key(self.candle_type);
 
-        let Some(candle) = self.candles.get_mut(&date) else{
-            let candle = CandleModel::new_from_price(price, 0.0);
-            self.candles.insert(date, candle.clone());
-            return CandleResult{
-                date,
-                candles_type: self.candle_type,
-                candle: candle.clone()
-            }   
-        };
-
-        candle.update_from_price(price, 0.0);
-        let to_return = candle.clone();
         self.rotate_candles();
 
-         CandleResult{
-            date,
-            candles_type: self.candle_type,
-            candle: to_return
-        }   
-    }
+        if let Some(candle) = self.candles.get_mut(&date) {
+            candle.update_from_price(price, 0.0);
 
-    fn rotate_candles(&mut self) {
-        let ids_to_remove = self.get_candles_ids_to_rotate();
+            return CandleResult {
+                date,
+                candles_type: self.candle_type,
+                candle: candle.clone(),
+            };
+        } else {
+            let candle = CandleModel::new_from_price(price, 0.0);
+            self.candles.insert(date, candle.clone());
 
-        for date in ids_to_remove {
-            self.candles.remove(&date);
+            return CandleResult {
+                date,
+                candles_type: self.candle_type,
+                candle: candle.clone(),
+            };
         }
     }
 
-    fn get_candles_ids_to_rotate(&self) -> Vec<CandleDateKey> {
+    fn rotate_candles(&mut self) {
+        if let Some(ids_to_remove) = self.get_candles_ids_to_rotate() {
+            for date in ids_to_remove {
+                self.candles.remove(&date);
+            }
+        }
+    }
+
+    fn get_candles_ids_to_rotate(&self) -> Option<Vec<CandleDateKey>> {
         let Some(cache_load_duration) = self.rotate_period else{
-            return Vec::new();
+            return None;
         };
 
         let mut max_possible_date = DateTimeAsMicroseconds::now();
         max_possible_date.add(cache_load_duration);
 
         let key_date = max_possible_date.into_candle_date_key(self.candle_type);
-        return self
-            .candles
-            .range(..key_date)
-            .map(|(date, _)| *date)
-            .collect();
+        return Some(
+            self.candles
+                .range(..key_date)
+                .map(|(date, _)| *date)
+                .collect(),
+        );
     }
 }
 
