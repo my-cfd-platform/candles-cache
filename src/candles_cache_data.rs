@@ -4,6 +4,7 @@ use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{CandleDateTimeKey, CandleLoadModel, CandleModel, CandleType, RotateSettings};
 
+#[derive(Debug, Clone)]
 pub struct CandleResult {
     pub date: u64,
     pub candles_type: CandleType,
@@ -85,7 +86,7 @@ impl CandlesTypesCache {
         return candle_cache.get_in_date_range(date_from, date_to);
     }
 
-    pub fn get_all_from_cache(&self) -> Vec<(u64, CandleType, CandleModel)> {
+    pub fn get_all_from_cache(&self) -> Vec<CandleResult> {
         let mut result = vec![];
 
         for (_, candle_cache) in &self.candles {
@@ -142,11 +143,15 @@ impl CandleDateCache {
         return candles;
     }
 
-    pub fn get_all_from_cache(&self) -> Vec<(u64, CandleType, CandleModel)> {
+    pub fn get_all_from_cache(&self) -> Vec<CandleResult> {
         let mut result = vec![];
 
         for (date, candle) in &self.candles {
-            result.push((date.to_owned(), self.candle_type, candle.clone()))
+            result.push(CandleResult{
+                date: *date,
+                candles_type: self.candle_type,
+                candle: candle.clone(),
+            });
         }
 
         return result;

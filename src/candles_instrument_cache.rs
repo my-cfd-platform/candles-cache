@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleLoadModel, CandleModel, CandlePersistModel, CandleType, CandlesBidAsk,
+    CandleLoadModel, CandleModel, CandlePersistModel, CandleResult, CandleType, CandlesBidAsk,
     CandlesPersistCache, CandlesTypesCache, RotateSettings,
 };
 
@@ -129,7 +129,7 @@ impl CandlesInstrumentsCache {
         return result;
     }
 
-    pub fn get_all_from_cache(&self, is_bid: bool) -> Vec<(String, u64, CandleType, CandleModel)> {
+    pub fn get_all_from_cache(&self, is_bid: bool) -> Vec<(String, CandleResult)> {
         let caches = match is_bid {
             true => &self.bids_candles,
             false => &self.asks_candles,
@@ -138,18 +138,11 @@ impl CandlesInstrumentsCache {
         let mut result = vec![];
 
         for (instrument, cache) in caches {
-            let mut from_cache = cache
+            let mut from_cache: Vec<(String, CandleResult)> = cache
                 .get_all_from_cache()
                 .iter()
-                .map(|(date, candle_type, candle)| {
-                    (
-                        instrument.clone(),
-                        date.to_owned(),
-                        candle_type.to_owned(),
-                        candle.to_owned(),
-                    )
-                })
-                .collect::<Vec<(String, u64, CandleType, CandleModel)>>();
+                .map(|candle| (instrument.to_string(), candle.clone()))
+                .collect();
 
             result.append(&mut from_cache)
         }
