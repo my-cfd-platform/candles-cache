@@ -118,9 +118,10 @@ impl CandleDateCache {
         date_to: DateTimeAsMicroseconds,
     ) -> Vec<(u64, CandleModel)> {
         println!(
-            "Requesting candles from cache {}-{} ",
+            "Requesting candles from cache {}-{}. Candles has {} elements ",
             date_from.to_rfc3339(),
-            date_to.to_rfc3339()
+            date_to.to_rfc3339(),
+            self.candles.len()
         );
 
         let mut candles = Vec::new();
