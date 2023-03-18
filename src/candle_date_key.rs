@@ -13,6 +13,21 @@ impl CandleDateKey {
     pub fn get_value(&self) -> u64 {
         self.0
     }
+
+    pub fn as_unix_seconds(&self) -> i64 {
+        let dt: DateTimeAsMicroseconds = self.into();
+        dt.unix_microseconds / 1000000
+    }
+
+    pub fn as_unix_milliseconds(&self) -> i64 {
+        let dt: DateTimeAsMicroseconds = self.into();
+        dt.unix_microseconds / 1000
+    }
+
+    pub fn as_unix_microseconds(&self) -> i64 {
+        let dt: DateTimeAsMicroseconds = self.into();
+        dt.unix_microseconds
+    }
 }
 
 pub trait GetCandleDateKey {
@@ -34,38 +49,47 @@ impl GetCandleDateKey for DateTimeAsMicroseconds {
     }
 }
 
-impl Into<DateTimeAsMicroseconds> for CandleDateKey {
+impl Into<DateTimeAsMicroseconds> for &CandleDateKey {
     fn into(self) -> DateTimeAsMicroseconds {
-        let value = self.get_value();
-
-        let year = value / 100000000;
-
-        let value = value - year * 100000000;
-
-        let month = value / 1000000;
-
-        let value = value - month * 1000000;
-
-        let day = value / 10000;
-
-        let value = value - day * 10000;
-
-        let hour = value / 100;
-
-        let value = value - hour * 100;
-
-        DateTimeAsMicroseconds::create(
-            year as i32,
-            month as u32,
-            day as u32,
-            hour as u32,
-            value as u32,
-            0,
-            0,
-        )
+        from_key_to_date_time(*self)
     }
 }
 
+impl Into<DateTimeAsMicroseconds> for CandleDateKey {
+    fn into(self) -> DateTimeAsMicroseconds {
+        from_key_to_date_time(self)
+    }
+}
+
+fn from_key_to_date_time(key: CandleDateKey) -> DateTimeAsMicroseconds {
+    let value = key.get_value();
+
+    let year = value / 100000000;
+
+    let value = value - year * 100000000;
+
+    let month = value / 1000000;
+
+    let value = value - month * 1000000;
+
+    let day = value / 10000;
+
+    let value = value - day * 10000;
+
+    let hour = value / 100;
+
+    let value = value - hour * 100;
+
+    DateTimeAsMicroseconds::create(
+        year as i32,
+        month as u32,
+        day as u32,
+        hour as u32,
+        value as u32,
+        0,
+        0,
+    )
+}
 #[cfg(test)]
 mod tests {
     use rust_extensions::date_time::DateTimeAsMicroseconds;
