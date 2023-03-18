@@ -13,28 +13,28 @@ impl CandlesTypesCache {
         Self {
             candles: BTreeMap::from([
                 (
-                    CandleType::Minute as u8,
+                    CandleType::Minute.to_u8(),
                     CandleDateCache::new(
                         CandleType::Minute,
                         rotate_settings.get_target(&CandleType::Minute),
                     ),
                 ),
                 (
-                    CandleType::Hour as u8,
+                    CandleType::Hour.to_u8(),
                     CandleDateCache::new(
                         CandleType::Hour,
                         rotate_settings.get_target(&CandleType::Hour),
                     ),
                 ),
                 (
-                    CandleType::Day as u8,
+                    CandleType::Day.to_u8(),
                     CandleDateCache::new(
                         CandleType::Day,
                         rotate_settings.get_target(&CandleType::Day),
                     ),
                 ),
                 (
-                    CandleType::Month as u8,
+                    CandleType::Month.to_u8(),
                     CandleDateCache::new(
                         CandleType::Month,
                         rotate_settings.get_target(&CandleType::Month),
@@ -45,7 +45,7 @@ impl CandlesTypesCache {
     }
 
     pub fn load_candle(&mut self, candle: CandleLoadModel) {
-        let Some(date_candle) = self.candles.get_mut(&(candle.candle_type as u8)) else{
+        let Some(date_candle) = self.candles.get_mut(&(candle.candle_type.to_u8())) else{
             panic!("Invalid candle type")
         };
 
@@ -72,7 +72,7 @@ impl CandlesTypesCache {
         date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
     ) -> Vec<(u64, CandleModel)> {
-        let Some(candle_cache) = self.candles.get(&(candle_type as u8)) else{
+        let Some(candle_cache) = self.candles.get(&(candle_type.to_u8())) else{
             return Vec::new();
         };
 

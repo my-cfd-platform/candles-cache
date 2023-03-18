@@ -13,7 +13,16 @@ impl CandleType {
             1 => Self::Hour,
             2 => Self::Day,
             3 => Self::Month,
-            _ => panic!("Invalid candle type"),
+            _ => panic!("Invalid candle type {}", value),
+        }
+    }
+
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            CandleType::Minute => 0u8,
+            CandleType::Hour => 1u8,
+            CandleType::Day => 2u8,
+            CandleType::Month => 3u8,
         }
     }
 }
