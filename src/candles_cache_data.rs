@@ -117,6 +117,12 @@ impl CandleDateCache {
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
     ) -> Vec<(u64, CandleModel)> {
+        println!(
+            "Requesting candles from cache {}-{} ",
+            date_from.to_rfc3339(),
+            date_to.to_rfc3339()
+        );
+
         let mut candles = Vec::new();
 
         let date_from = date_from.format_date(self.candle_type);
