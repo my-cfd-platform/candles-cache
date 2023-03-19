@@ -7,14 +7,15 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct CandleResult {
+pub struct CandleToPersist {
     pub date_key: CandleDateKey,
+    pub candle_type: CandleType,
     pub data: CandleData,
 }
 
 pub struct HandleBidAskChanges {
-    pub bids_to_persist: Vec<CandleResult>,
-    pub asks_to_persist: Vec<CandleResult>,
+    pub bids_to_persist: Vec<CandleToPersist>,
+    pub asks_to_persist: Vec<CandleToPersist>,
 }
 
 pub struct CandlesInstrumentsCache {
@@ -71,6 +72,13 @@ impl CandlesInstrumentsCache {
         }
     }
 
+    fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesTypesCache> {
+        match bid_or_ask {
+            BidOrAsk::Bid => &self.bids_candles,
+            BidOrAsk::Ask => &self.asks_candles,
+        }
+    }
+
     fn get_bid_ask_candles_mut(
         &mut self,
         bid_or_ask: BidOrAsk,
@@ -105,13 +113,6 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesTypesCache> {
-        match bid_or_ask {
-            BidOrAsk::Bid => &self.bids_candles,
-            BidOrAsk::Ask => &self.asks_candles,
-        }
-    }
-
     pub fn get_candle(
         &self,
         instrument: &str,
@@ -142,7 +143,7 @@ impl CandlesInstrumentsCache {
         cache_by_instrument.get_in_date_range(date_from, date_to, candle_type)
     }
 
-    pub fn get_all_from_cache(&self, bid_or_ask: BidOrAsk) -> HashMap<String, Vec<CandleResult>> {
+    pub fn get_all_from_cache(&self, bid_or_ask: BidOrAsk) -> HashMap<String, Vec<CandleModel>> {
         let caches = match bid_or_ask {
             BidOrAsk::Bid => &self.bids_candles,
             BidOrAsk::Ask => &self.asks_candles,
@@ -151,7 +152,7 @@ impl CandlesInstrumentsCache {
         let mut result = HashMap::new();
 
         for (instrument, cache) in caches {
-            let from_cache: Vec<CandleResult> = cache
+            let from_cache: Vec<CandleModel> = cache
                 .get_all_from_cache()
                 .iter()
                 .map(|candle| candle.clone())

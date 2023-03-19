@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, time::Duration};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{CandleData, CandleDateKey, CandleModel, CandleResult, CandleType, GetCandleDateKey};
+use crate::{CandleData, CandleDateKey, CandleModel, CandleType, GetCandleDateKey};
 
 pub struct CandleDateCache {
     pub candles: BTreeMap<CandleDateKey, CandleModel>,
@@ -49,11 +49,11 @@ impl CandleDateCache {
         return candles;
     }
 
-    pub fn get_all_from_cache(&self) -> Vec<CandleResult> {
+    pub fn get_all_from_cache(&self) -> Vec<CandleModel> {
         let mut result = vec![];
 
         for (date, candle) in &self.candles {
-            result.push(CandleResult {
+            result.push(CandleModel {
                 date_key: *date,
                 data: candle.data.clone(),
             });

@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleDateCache, CandleDateKey, CandleModel, CandleResult, CandleType, GetCandleDateKey,
+    CandleDateCache, CandleDateKey, CandleModel, CandleToPersist, CandleType, GetCandleDateKey,
     RotateSettings,
 };
 
@@ -67,14 +67,16 @@ impl CandlesTypesCache {
         &mut self,
         price: f64,
         price_date: DateTimeAsMicroseconds,
-    ) -> Vec<CandleResult> {
+    ) -> Vec<CandleToPersist> {
         let mut result = vec![];
         for (candle_type, candle_cache) in &mut self.candles {
-            let date_key = price_date.into_candle_date_key(CandleType::from_u8(*candle_type));
+            let candle_type = CandleType::from_u8(*candle_type);
+            let date_key = price_date.into_candle_date_key(candle_type);
 
             let new_candle_data = candle_cache.handle_price(price, date_key);
-            result.push(CandleResult {
+            result.push(CandleToPersist {
                 date_key,
+                candle_type,
                 data: new_candle_data,
             })
         }
@@ -93,7 +95,7 @@ impl CandlesTypesCache {
         Some(candles_by_type.get_in_date_range(date_from, date_to))
     }
 
-    pub fn get_all_from_cache(&self) -> Vec<CandleResult> {
+    pub fn get_all_from_cache(&self) -> Vec<CandleModel> {
         let mut result = vec![];
 
         for (_, candle_cache) in &self.candles {

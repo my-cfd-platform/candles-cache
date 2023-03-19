@@ -26,3 +26,15 @@ impl CandleType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::CandleType;
+
+    #[test]
+    fn tests() {
+        let src = 0;
+        let ct = CandleType::from_u8(src);
+        assert_eq!(ct.to_u8(), src);
+    }
+}
