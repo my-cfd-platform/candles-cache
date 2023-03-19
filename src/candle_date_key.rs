@@ -30,6 +30,18 @@ impl CandleDateKey {
     }
 }
 
+impl Into<CandleDateKey> for u64 {
+    fn into(self) -> CandleDateKey {
+        CandleDateKey::new(self)
+    }
+}
+
+impl Into<CandleDateKey> for i64 {
+    fn into(self) -> CandleDateKey {
+        CandleDateKey::new(self as u64)
+    }
+}
+
 pub trait GetCandleDateKey {
     fn into_candle_date_key(&self, candle_type: CandleType) -> CandleDateKey;
 }
