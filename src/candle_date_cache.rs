@@ -31,7 +31,8 @@ impl CandleDateCache {
         date_to: DateTimeAsMicroseconds,
     ) -> Vec<CandleModel> {
         println!(
-            "Requesting candles from cache {}-{}. Candles has {} elements ",
+            "Requesting candles from cache {:?}.  {}-{}. Candles has {} elements ",
+            self.candle_type,
             date_from.to_rfc3339(),
             date_to.to_rfc3339(),
             self.candles.len()
