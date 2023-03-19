@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleDateKey, CandleLoadModel, CandleModel, CandlePersistModel, CandleType, CandlesBidAsk,
-    CandlesPersistCache, CandlesTypesCache, RotateSettings,
+    BidOrAsk, CandleDateKey, CandleLoadModel, CandleModel, CandlePersistModel, CandleType,
+    CandlesBidAsk, CandlesPersistCache, CandlesTypesCache, RotateSettings,
 };
 
 #[derive(Debug, Clone)]
@@ -111,11 +111,10 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    fn get_candles_cache(&self, is_bid: bool) -> &BTreeMap<String, CandlesTypesCache> {
-        if is_bid {
-            &self.bids_candles
-        } else {
-            &self.asks_candles
+    fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesTypesCache> {
+        match bid_or_ask {
+            BidOrAsk::Bid => &self.bids_candles,
+            BidOrAsk::Ask => &self.asks_candles,
         }
     }
 
@@ -124,9 +123,9 @@ impl CandlesInstrumentsCache {
         instrument: &str,
         date_key: CandleDateKey,
         candle_type: CandleType,
-        is_bid: bool,
+        bid_or_ask: BidOrAsk,
     ) -> Option<CandleModel> {
-        let result = self.get_candles_cache(is_bid).get(instrument);
+        let result = self.get_candles_cache(bid_or_ask).get(instrument);
 
         if result.is_none() {
             println!("No cache for instrument {}", instrument);
@@ -143,19 +142,19 @@ impl CandlesInstrumentsCache {
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
-        is_bid: bool,
+        bid_or_ask: BidOrAsk,
     ) -> Option<Vec<(CandleDateKey, CandleModel)>> {
-        if let Some(candles) = self.get_candles_cache(is_bid).get(instrument) {
+        if let Some(candles) = self.get_candles_cache(bid_or_ask).get(instrument) {
             Some(candles.get_in_date_range(date_from, date_to, candle_type))
         } else {
             None
         }
     }
 
-    pub fn get_all_from_cache(&self, is_bid: bool) -> Vec<(String, CandleResult)> {
-        let caches = match is_bid {
-            true => &self.bids_candles,
-            false => &self.asks_candles,
+    pub fn get_all_from_cache(&self, bid_or_ask: BidOrAsk) -> Vec<(String, CandleResult)> {
+        let caches = match bid_or_ask {
+            BidOrAsk::Bid => &self.bids_candles,
+            BidOrAsk::Ask => &self.asks_candles,
         };
 
         let mut result = vec![];
