@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
@@ -8,13 +8,13 @@ use crate::{
 };
 
 pub struct CandlesTypesCache {
-    pub candles: BTreeMap<u8, CandleDateCache>,
+    pub candles: HashMap<u8, CandleDateCache>,
 }
 
 impl CandlesTypesCache {
     pub fn new(rotate_settings: RotateSettings) -> Self {
         Self {
-            candles: BTreeMap::from([
+            candles: HashMap::from([
                 (
                     CandleType::Minute.to_u8(),
                     CandleDateCache::new(
@@ -95,12 +95,12 @@ impl CandlesTypesCache {
         Some(candles_by_type.get_in_date_range(date_from, date_to))
     }
 
-    pub fn get_all_from_cache(&self) -> Vec<CandleModel> {
-        let mut result = vec![];
+    pub fn get_all_from_cache(&self) -> Vec<(CandleType, Vec<CandleModel>)> {
+        let mut result = Vec::new();
 
-        for (_, candle_cache) in &self.candles {
-            let mut candles = candle_cache.get_all_from_cache();
-            result.append(&mut candles)
+        for (candle_type, candle_cache) in &self.candles {
+            let candles = candle_cache.get_all_from_cache();
+            result.push((CandleType::from_u8(*candle_type), candles));
         }
 
         return result;
