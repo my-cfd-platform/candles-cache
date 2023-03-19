@@ -83,6 +83,11 @@ impl CandleDateCache {
 
     fn rotate_candles(&mut self) {
         if let Some(ids_to_remove) = self.get_candles_ids_to_rotate() {
+            println!(
+                "Rotating {} candles for type: {:?}",
+                ids_to_remove.len(),
+                self.candle_type
+            );
             for date in ids_to_remove {
                 self.candles.remove(&date);
             }
@@ -95,7 +100,7 @@ impl CandleDateCache {
         };
 
         let mut max_possible_date = DateTimeAsMicroseconds::now();
-        max_possible_date.add(cache_load_duration);
+        max_possible_date.sub(cache_load_duration);
 
         let key_date = max_possible_date.into_candle_date_key(self.candle_type);
         return Some(
