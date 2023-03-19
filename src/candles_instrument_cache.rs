@@ -3,8 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    BidOrAsk, CandleData, CandleDateKey, CandleModel, CandleType, CandlesBidAsk, CandlesTypesCache,
-    RotateSettings,
+    BidOrAsk, CandleData, CandleDateKey, CandleModel, CandleType, CandlesTypesCache, RotateSettings,
 };
 
 #[derive(Debug, Clone)]
@@ -33,32 +32,38 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    pub async fn handle_bid_ask(&mut self, bid_ask: &impl CandlesBidAsk) -> HandleBidAskChanges {
-        if !self.bids_candles.contains_key(bid_ask.get_instrument()) {
+    pub async fn handle_bid_ask(
+        &mut self,
+        instrument_id: &str,
+        bid: f64,
+        ask: f64,
+        time_stamp: DateTimeAsMicroseconds,
+    ) -> HandleBidAskChanges {
+        if !self.bids_candles.contains_key(instrument_id) {
             self.bids_candles.insert(
-                bid_ask.get_instrument().to_string(),
+                instrument_id.to_string(),
                 CandlesTypesCache::new(self.rotate_settings.clone()),
             );
         }
 
         let bids_to_persist = self
             .bids_candles
-            .get_mut(bid_ask.get_instrument())
+            .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(bid_ask.get_bid(), bid_ask.get_timestamp());
+            .handle_new_price(bid, time_stamp);
 
-        if !self.asks_candles.contains_key(bid_ask.get_instrument()) {
+        if !self.asks_candles.contains_key(instrument_id) {
             self.asks_candles.insert(
-                bid_ask.get_instrument().to_string(),
+                instrument_id.to_string(),
                 CandlesTypesCache::new(self.rotate_settings.clone()),
             );
         }
 
         let asks_to_persist = self
             .asks_candles
-            .get_mut(bid_ask.get_instrument())
+            .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(bid_ask.get_ask(), bid_ask.get_timestamp());
+            .handle_new_price(ask, time_stamp);
 
         HandleBidAskChanges {
             bids_to_persist,
