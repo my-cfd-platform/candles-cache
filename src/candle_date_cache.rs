@@ -1,11 +1,11 @@
 use std::{collections::BTreeMap, time::Duration};
 
-use rust_extensions::date_time::DateTimeAsMicroseconds;
+use rust_extensions::{date_time::DateTimeAsMicroseconds, lazy::LazyVec};
 
 use crate::{CandleData, CandleDateKey, CandleModel, CandleType, GetCandleDateKey};
 
 pub struct CandleDateCache {
-    pub candles: BTreeMap<CandleDateKey, CandleModel>,
+    pub candles: BTreeMap<u64, CandleModel>,
     pub candle_type: CandleType,
     pub rotate_period: Option<Duration>,
 }
@@ -22,7 +22,7 @@ impl CandleDateCache {
     pub fn load(&mut self, candle_to_load: CandleModel) {
         let date_index = candle_to_load.get_candle_date_key();
         let model: CandleModel = candle_to_load.into();
-        self.candles.insert(date_index, model);
+        self.candles.insert(date_index.get_value(), model);
     }
 
     pub fn get_in_date_range(
@@ -35,7 +35,10 @@ impl CandleDateCache {
         let date_from = date_from.into_candle_date_key(self.candle_type);
         let date_to = date_to.into_candle_date_key(self.candle_type);
 
-        for (_, candle) in self.candles.range(date_from..date_to) {
+        for (_, candle) in self
+            .candles
+            .range(date_from.get_value()..date_to.get_value())
+        {
             candles.push(candle.clone());
         }
 
@@ -47,7 +50,7 @@ impl CandleDateCache {
 
         for (date, candle) in &self.candles {
             result.push(CandleModel {
-                date_key: *date,
+                date_key: CandleDateKey::new(*date),
                 data: candle.data.clone(),
             });
         }
@@ -56,9 +59,9 @@ impl CandleDateCache {
     }
 
     pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
-        //self.rotate_candles();
+        self.rotate_candles();
 
-        if let Some(candle) = self.candles.get_mut(&date_key) {
+        if let Some(candle) = self.candles.get_mut(&date_key.get_value()) {
             candle.data.update_from_price(price, 0.0);
 
             return candle.data.clone();
@@ -68,7 +71,7 @@ impl CandleDateCache {
                 date_key,
                 data: data.clone(),
             };
-            self.candles.insert(date_key, candle.clone());
+            self.candles.insert(date_key.get_value(), candle.clone());
 
             return data;
         }
@@ -87,7 +90,7 @@ impl CandleDateCache {
         }
     }
 
-    fn get_candles_ids_to_rotate(&self) -> Option<Vec<CandleDateKey>> {
+    fn get_candles_ids_to_rotate(&self) -> Option<Vec<u64>> {
         let Some(cache_load_duration) = self.rotate_period else{
             return None;
         };
@@ -96,16 +99,22 @@ impl CandleDateCache {
         max_possible_date.sub(cache_load_duration);
 
         let key_date = max_possible_date.into_candle_date_key(self.candle_type);
-        return Some(
-            self.candles
-                .range(..key_date)
-                .map(|(date, _)| *date)
-                .collect(),
-        );
+
+        let mut result = LazyVec::new();
+
+        for date in self.candles.keys() {
+            if *date < key_date.get_value() {
+                result.add(date.clone())
+            } else {
+                break;
+            }
+        }
+
+        result.get_result()
     }
 
     pub fn get_candle(&self, date_key: CandleDateKey) -> Option<CandleModel> {
-        self.candles.get(&date_key).cloned()
+        self.candles.get(&date_key.get_value()).cloned()
     }
 }
 
