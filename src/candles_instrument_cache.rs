@@ -3,9 +3,16 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleDateKey, CandleLoadModel, CandleModel, CandlePersistModel, CandleResult, CandleType,
-    CandlesBidAsk, CandlesPersistCache, CandlesTypesCache, RotateSettings,
+    CandleDateKey, CandleLoadModel, CandleModel, CandlePersistModel, CandleType, CandlesBidAsk,
+    CandlesPersistCache, CandlesTypesCache, RotateSettings,
 };
+
+#[derive(Debug, Clone)]
+pub struct CandleResult {
+    pub date: CandleDateKey,
+    pub candles_type: CandleType,
+    pub candle: CandleModel,
+}
 
 pub struct CandlesInstrumentsCache {
     pub bids_candles: BTreeMap<String, CandlesTypesCache>,
@@ -104,6 +111,32 @@ impl CandlesInstrumentsCache {
         }
     }
 
+    fn get_candles_cache(&self, is_bid: bool) -> &BTreeMap<String, CandlesTypesCache> {
+        if is_bid {
+            &self.bids_candles
+        } else {
+            &self.asks_candles
+        }
+    }
+
+    pub fn get_candle(
+        &self,
+        instrument: &str,
+        date_key: CandleDateKey,
+        candle_type: CandleType,
+        is_bid: bool,
+    ) -> Option<CandleModel> {
+        let result = self.get_candles_cache(is_bid).get(instrument);
+
+        if result.is_none() {
+            println!("No cache for instrument {}", instrument);
+        }
+
+        let result = result.unwrap();
+
+        result.get_candle(date_key, candle_type)
+    }
+
     pub fn get_in_date_range(
         &self,
         instrument: &str,
@@ -112,21 +145,11 @@ impl CandlesInstrumentsCache {
         candle_type: CandleType,
         is_bid: bool,
     ) -> Option<Vec<(CandleDateKey, CandleModel)>> {
-        let mut result = None;
-        match is_bid {
-            true => {
-                if let Some(candles) = self.bids_candles.get(instrument) {
-                    result = Some(candles.get_in_date_range(date_from, date_to, candle_type));
-                }
-            }
-            false => {
-                if let Some(candles) = self.asks_candles.get(instrument) {
-                    result = Some(candles.get_in_date_range(date_from, date_to, candle_type));
-                }
-            }
-        };
-
-        return result;
+        if let Some(candles) = self.get_candles_cache(is_bid).get(instrument) {
+            Some(candles.get_in_date_range(date_from, date_to, candle_type))
+        } else {
+            None
+        }
     }
 
     pub fn get_all_from_cache(&self, is_bid: bool) -> Vec<(String, CandleResult)> {
