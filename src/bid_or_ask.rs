@@ -12,4 +12,11 @@ impl BidOrAsk {
             Self::Ask
         }
     }
+
+    pub fn to_is_bid(&self) -> bool {
+        match self {
+            Self::Bid => true,
+            Self::Ask => false,
+        }
+    }
 }
