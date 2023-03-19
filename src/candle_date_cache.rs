@@ -2,9 +2,7 @@ use std::{collections::BTreeMap, time::Duration};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{
-    CandleDateKey, CandleLoadModel, CandleModel, CandleResult, CandleType, GetCandleDateKey,
-};
+use crate::{CandleData, CandleDateKey, CandleModel, CandleResult, CandleType, GetCandleDateKey};
 
 pub struct CandleDateCache {
     pub candles: BTreeMap<CandleDateKey, CandleModel>,
@@ -21,7 +19,7 @@ impl CandleDateCache {
         }
     }
 
-    pub fn load(&mut self, candle_to_load: CandleLoadModel) {
+    pub fn load(&mut self, candle_to_load: CandleModel) {
         let date_index = candle_to_load.get_candle_date_key();
         let model: CandleModel = candle_to_load.into();
         self.candles.insert(date_index, model);
@@ -31,7 +29,7 @@ impl CandleDateCache {
         &self,
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
-    ) -> Vec<(CandleDateKey, CandleModel)> {
+    ) -> Vec<CandleModel> {
         println!(
             "Requesting candles from cache {}-{}. Candles has {} elements ",
             date_from.to_rfc3339(),
@@ -44,8 +42,8 @@ impl CandleDateCache {
         let date_from = date_from.into_candle_date_key(self.candle_type);
         let date_to = date_to.into_candle_date_key(self.candle_type);
 
-        for (date, candle) in self.candles.range(date_from..date_to) {
-            candles.push((date.to_owned(), candle.clone()));
+        for (_, candle) in self.candles.range(date_from..date_to) {
+            candles.push(candle.clone());
         }
 
         return candles;
@@ -56,37 +54,30 @@ impl CandleDateCache {
 
         for (date, candle) in &self.candles {
             result.push(CandleResult {
-                date: *date,
-                candles_type: self.candle_type,
-                candle: candle.clone(),
+                date_key: *date,
+                data: candle.data.clone(),
             });
         }
 
         return result;
     }
 
-    pub fn handle_price(&mut self, price: f64, price_date: DateTimeAsMicroseconds) -> CandleResult {
-        let date: CandleDateKey = price_date.into_candle_date_key(self.candle_type);
-
+    pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
         self.rotate_candles();
 
-        if let Some(candle) = self.candles.get_mut(&date) {
-            candle.update_from_price(price, 0.0);
+        if let Some(candle) = self.candles.get_mut(&date_key) {
+            candle.data.update_from_price(price, 0.0);
 
-            return CandleResult {
-                date,
-                candles_type: self.candle_type,
-                candle: candle.clone(),
-            };
+            return candle.data.clone();
         } else {
-            let candle = CandleModel::new_from_price(price, 0.0);
-            self.candles.insert(date, candle.clone());
-
-            return CandleResult {
-                date,
-                candles_type: self.candle_type,
-                candle: candle.clone(),
+            let data = CandleData::new_from_price(price, 0.0);
+            let candle = CandleModel {
+                date_key,
+                data: data.clone(),
             };
+            self.candles.insert(date_key, candle.clone());
+
+            return data;
         }
     }
 
@@ -117,5 +108,46 @@ impl CandleDateCache {
 
     pub fn get_candle(&self, date_key: CandleDateKey) -> Option<CandleModel> {
         self.candles.get(&date_key).cloned()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rust_extensions::date_time::DateTimeAsMicroseconds;
+
+    use crate::{CandleDateCache, GetCandleDateKey};
+
+    #[test]
+    fn test() {
+        let mut cache = CandleDateCache::new(crate::CandleType::Day, None);
+
+        let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
+        let date_key = now.into_candle_date_key(crate::CandleType::Day);
+
+        cache.handle_price(0.55, date_key);
+
+        let mut from = now;
+        let mut to = now;
+
+        from.add_days(-1);
+
+        to.add_days(1);
+
+        let a = cache.get_in_date_range(from, to);
+
+        let r = a.get(0).unwrap();
+
+        assert_eq!(201501010000, r.date_key.get_value());
+
+        let mut from = now;
+        let mut to = now;
+
+        from.add_days(1);
+
+        to.add_days(2);
+
+        let a = cache.get_in_date_range(from, to);
+
+        assert_eq!(0, a.len())
     }
 }

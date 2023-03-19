@@ -1,27 +1,13 @@
-#[derive(Debug, Clone, Copy)]
+use crate::{CandleData, CandleDateKey};
+
+#[derive(Debug, Clone)]
 pub struct CandleModel {
-    pub open: f64,
-    pub close: f64,
-    pub high: f64,
-    pub low: f64,
-    pub volume: f64,
+    pub date_key: CandleDateKey,
+    pub data: CandleData,
 }
 
 impl CandleModel {
-    pub fn new_from_price(price: f64, volume: f64) -> Self {
-        Self {
-            open: price,
-            close: price,
-            high: price,
-            low: price,
-            volume,
-        }
-    }
-
-    pub fn update_from_price(&mut self, price: f64, volume: f64) {
-        self.close = price;
-        self.high = self.high.max(price);
-        self.low = self.low.min(price);
-        self.volume += volume;
+    pub fn get_candle_date_key(&self) -> CandleDateKey {
+        return self.date_key;
     }
 }

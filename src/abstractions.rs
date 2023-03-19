@@ -6,7 +6,7 @@ pub enum BidOrAsk {
 }
 
 pub trait CandlesBidAsk {
-    fn get_instrument(&self) -> String;
+    fn get_instrument(&self) -> &str;
     fn get_bid(&self) -> f64;
     fn get_ask(&self) -> f64;
     fn get_timestamp(&self) -> DateTimeAsMicroseconds;

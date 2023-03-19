@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::{
-    CandleDateCache, CandleDateKey, CandleLoadModel, CandleModel, CandleResult, CandleType,
+    CandleDateCache, CandleDateKey, CandleModel, CandleResult, CandleType, GetCandleDateKey,
     RotateSettings,
 };
 
@@ -47,12 +47,20 @@ impl CandlesTypesCache {
         }
     }
 
-    pub fn load_candle(&mut self, candle: CandleLoadModel) {
-        let Some(date_candle) = self.candles.get_mut(&(candle.candle_type.to_u8())) else{
-            panic!("Invalid candle type")
-        };
-
-        date_candle.load(candle);
+    pub fn load_candle(&mut self, instrument: &str, candle_type: CandleType, candle: CandleModel) {
+        match self.candles.get_mut(&candle_type.to_u8()) {
+            Some(candles) => {
+                candles.load(candle);
+            }
+            None => {
+                panic!(
+                    "Invalid candle type {} in candle {} of date_key {}",
+                    candle_type.to_u8(),
+                    instrument,
+                    candle.date_key.get_value()
+                )
+            }
+        }
     }
 
     pub fn handle_new_price(
@@ -61,9 +69,14 @@ impl CandlesTypesCache {
         price_date: DateTimeAsMicroseconds,
     ) -> Vec<CandleResult> {
         let mut result = vec![];
-        for (_, candle_cache) in self.candles.iter_mut() {
-            let to_return = candle_cache.handle_price(price, price_date);
-            result.push(to_return)
+        for (candle_type, candle_cache) in &mut self.candles {
+            let date_key = price_date.into_candle_date_key(CandleType::from_u8(*candle_type));
+
+            let new_candle_data = candle_cache.handle_price(price, date_key);
+            result.push(CandleResult {
+                date_key,
+                data: new_candle_data,
+            })
         }
 
         return result;
@@ -74,12 +87,10 @@ impl CandlesTypesCache {
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
         candle_type: CandleType,
-    ) -> Vec<(CandleDateKey, CandleModel)> {
-        let Some(candle_cache) = self.candles.get(&(candle_type.to_u8())) else{
-            return Vec::new();
-        };
+    ) -> Option<Vec<CandleModel>> {
+        let candles_by_type = self.candles.get(&(candle_type.to_u8()))?;
 
-        return candle_cache.get_in_date_range(date_from, date_to);
+        Some(candles_by_type.get_in_date_range(date_from, date_to))
     }
 
     pub fn get_all_from_cache(&self) -> Vec<CandleResult> {
@@ -109,45 +120,5 @@ impl CandlesTypesCache {
         );
 
         None
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use rust_extensions::date_time::DateTimeAsMicroseconds;
-
-    use crate::CandleDateCache;
-
-    #[test]
-    fn test() {
-        let mut cache = CandleDateCache::new(crate::CandleType::Day, None);
-
-        let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
-
-        cache.handle_price(0.55, now);
-
-        let mut from = now;
-        let mut to = now;
-
-        from.add_days(-1);
-
-        to.add_days(1);
-
-        let a = cache.get_in_date_range(from, to);
-
-        let r = a.get(0).unwrap();
-
-        assert_eq!(201501010000, r.0.get_value());
-
-        let mut from = now;
-        let mut to = now;
-
-        from.add_days(1);
-
-        to.add_days(2);
-
-        let a = cache.get_in_date_range(from, to);
-
-        assert_eq!(0, a.len())
     }
 }
