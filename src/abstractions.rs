@@ -1,5 +1,6 @@
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
+#[derive(Debug, Clone, Copy)]
 pub enum BidOrAsk {
     Bid,
     Ask,
