@@ -30,14 +30,6 @@ impl CandleDateCache {
         date_from: DateTimeAsMicroseconds,
         date_to: DateTimeAsMicroseconds,
     ) -> Vec<CandleModel> {
-        println!(
-            "Requesting candles from cache {:?}.  {}-{}. Candles has {} elements ",
-            self.candle_type,
-            date_from.to_rfc3339(),
-            date_to.to_rfc3339(),
-            self.candles.len()
-        );
-
         let mut candles = Vec::new();
 
         let date_from = date_from.into_candle_date_key(self.candle_type);
@@ -64,7 +56,7 @@ impl CandleDateCache {
     }
 
     pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
-        self.rotate_candles();
+        //self.rotate_candles();
 
         if let Some(candle) = self.candles.get_mut(&date_key) {
             candle.data.update_from_price(price, 0.0);
