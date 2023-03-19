@@ -25,6 +25,10 @@ impl CandleType {
             CandleType::Month => 3u8,
         }
     }
+
+    pub fn get_all_candle_types() -> Vec<Self> {
+        vec![Self::Minute, Self::Hour, Self::Day, Self::Month]
+    }
 }
 
 #[cfg(test)]
