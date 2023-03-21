@@ -113,6 +113,30 @@ impl CandlesInstrumentsCache {
         }
     }
 
+    pub fn update_candles(
+        &mut self,
+        bid_or_ask: BidOrAsk,
+        instrument: &str,
+        candle_type: CandleType,
+        candles_to_init: impl Iterator<Item = CandleModel>,
+    ) {
+        let rotate_settings = self.rotate_settings.clone();
+        let candles = self.get_bid_ask_candles_mut(bid_or_ask);
+
+        for candle_to_init in candles_to_init {
+            match candles.get_mut(instrument) {
+                Some(candles) => {
+                    candles.load_candle(instrument, candle_type, candle_to_init);
+                }
+                None => {
+                    let mut candles_cache = CandlesTypesCache::new(rotate_settings.clone());
+                    candles_cache.load_candle(instrument, candle_type, candle_to_init);
+                    candles.insert(instrument.to_string(), candles_cache);
+                }
+            };
+        }
+    }
+
     pub fn get_candle(
         &self,
         instrument: &str,
