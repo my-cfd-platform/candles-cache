@@ -185,4 +185,21 @@ impl CandlesInstrumentsCache {
 
         return result;
     }
+
+    pub fn get_all_by_instrument(
+        &self,
+        bid_or_ask: BidOrAsk,
+        instrument_id: &str,
+    ) -> Option<Vec<(CandleType, Vec<CandleModel>)>> {
+        let caches = match bid_or_ask {
+            BidOrAsk::Bid => &self.bids_candles,
+            BidOrAsk::Ask => &self.asks_candles,
+        };
+
+        if let Some(by_instrument) = caches.get(instrument_id) {
+            return Some(by_instrument.get_all_from_cache());
+        }
+
+        return None;
+    }
 }
