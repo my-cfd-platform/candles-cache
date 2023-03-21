@@ -2,6 +2,8 @@ use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use crate::CandleType;
 
+use super::candle_date_key_utils::DateTimeComponents;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, core::hash::Hash, PartialOrd, Ord)]
 pub struct CandleDateKey(u64);
 
@@ -74,30 +76,14 @@ impl Into<DateTimeAsMicroseconds> for CandleDateKey {
 }
 
 fn from_key_to_date_time(key: CandleDateKey) -> DateTimeAsMicroseconds {
-    let value = key.get_value();
-
-    let year = value / 100000000;
-
-    let value = value - year * 100000000;
-
-    let month = value / 1000000;
-
-    let value = value - month * 1000000;
-
-    let day = value / 10000;
-
-    let value = value - day * 10000;
-
-    let hour = value / 100;
-
-    let value = value - hour * 100;
+    let c = DateTimeComponents::from_date_key(key);
 
     DateTimeAsMicroseconds::create(
-        year as i32,
-        month as u32,
-        day as u32,
-        hour as u32,
-        value as u32,
+        c.year as i32,
+        c.month as u32,
+        c.day as u32,
+        c.hour as u32,
+        c.minute as u32,
         0,
         0,
     )
