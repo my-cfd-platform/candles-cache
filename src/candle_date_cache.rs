@@ -37,7 +37,7 @@ impl CandleDateCache {
 
         for (_, candle) in self
             .candles
-            .range(date_from.get_value()..date_to.get_value())
+            .range(date_from.get_value()..=date_to.get_value())
         {
             candles.push(candle.clone());
         }
