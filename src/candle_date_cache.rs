@@ -95,8 +95,7 @@ impl CandleDateCache {
             return None;
         };
 
-        let mut max_possible_date = DateTimeAsMicroseconds::now();
-        max_possible_date.sub(cache_load_duration);
+        let max_possible_date = DateTimeAsMicroseconds::now().sub(cache_load_duration);
 
         let key_date = max_possible_date.into_candle_date_key(self.candle_type);
 
