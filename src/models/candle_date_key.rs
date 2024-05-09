@@ -81,7 +81,7 @@ fn from_key_to_date_time(key: CandleDateKey) -> DateTimeAsMicroseconds {
     DateTimeAsMicroseconds::create(
         c.year as i32,
         c.month as u32,
-        c.day as u32,
+        if c.day == 0 { 1 } else { c.day as u32 },
         c.hour as u32,
         c.minute as u32,
         0,
@@ -126,5 +126,41 @@ mod tests {
         let result: DateTimeAsMicroseconds = db_key.into();
 
         assert_eq!("2021-01-01T10:22:00", &result.to_rfc3339()[..19])
+    }
+
+    #[test]
+    fn test_round_to_hour() {
+        let date_time =
+            DateTimeAsMicroseconds::parse_iso_string("2021-01-01T10:22:33.000000Z").unwrap();
+
+        let db_key = date_time.into_candle_date_key(CandleType::Hour);
+
+        let result: DateTimeAsMicroseconds = db_key.into();
+
+        assert_eq!("2021-01-01T10:00:00", &result.to_rfc3339()[..19])
+    }
+
+    #[test]
+    fn test_round_to_day() {
+        let date_time =
+            DateTimeAsMicroseconds::parse_iso_string("2021-01-01T10:22:33.000000Z").unwrap();
+
+        let db_key = date_time.into_candle_date_key(CandleType::Day);
+
+        let result: DateTimeAsMicroseconds = db_key.into();
+
+        assert_eq!("2021-01-01T00:00:00", &result.to_rfc3339()[..19])
+    }
+
+    #[test]
+    fn test_round_to_month() {
+        let date_time =
+            DateTimeAsMicroseconds::parse_iso_string("2021-01-01T10:22:33.000000Z").unwrap();
+
+        let db_key = date_time.into_candle_date_key(CandleType::Month);
+
+        let result: DateTimeAsMicroseconds = db_key.into();
+
+        assert_eq!("2021-01-01T00:00:00", &result.to_rfc3339()[..19])
     }
 }
