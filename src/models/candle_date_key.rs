@@ -32,7 +32,7 @@ impl CandleDateKey {
     }
 
     pub fn as_date_time(&self) -> DateTimeAsMicroseconds {
-        self.into()
+        from_key_to_date_time(*self)
     }
 }
 
