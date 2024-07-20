@@ -15,25 +15,6 @@ impl CandleDateKey {
     pub fn get_value(&self) -> u64 {
         self.0
     }
-
-    pub fn as_unix_seconds(&self) -> i64 {
-        let dt: DateTimeAsMicroseconds = self.into();
-        dt.unix_microseconds / 1000000
-    }
-
-    pub fn as_unix_milliseconds(&self) -> i64 {
-        let dt: DateTimeAsMicroseconds = self.into();
-        dt.unix_microseconds / 1000
-    }
-
-    pub fn as_unix_microseconds(&self) -> i64 {
-        let dt: DateTimeAsMicroseconds = self.into();
-        dt.unix_microseconds
-    }
-
-    pub fn as_date_time(&self) -> DateTimeAsMicroseconds {
-        from_key_to_date_time(*self)
-    }
 }
 
 impl Into<CandleDateKey> for u64 {
@@ -63,7 +44,7 @@ impl GetCandleDateKey for DateTimeAsMicroseconds {
 
         let date = format!("{:0<12}", self.to_chrono_utc().format(format));
 
-        return CandleDateKey::new(date.to_string().parse().unwrap());
+        return CandleDateKey::new(date.parse().unwrap());
     }
 }
 
@@ -165,6 +146,6 @@ mod tests {
 
         let result: DateTimeAsMicroseconds = db_key.into();
 
-        assert_eq!("2021-01-01T00:00:00", &result.to_rfc3339()[..19])
+        assert_eq!("2021-01-01T00:00:00", &result.to_rfc3339()[..19]);
     }
 }

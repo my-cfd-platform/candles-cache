@@ -98,5 +98,7 @@ mod tests {
         assert!(CandleType::Hour.verify_date_key(candle_date_key).is_err());
         assert!(CandleType::Day.verify_date_key(candle_date_key).is_err());
         assert!(CandleType::Month.verify_date_key(candle_date_key).is_ok());
+
+        println!("{:?}", CandleType::get_all_candle_types());
     }
 }
