@@ -30,6 +30,10 @@ impl CandleDateKey {
         let dt: DateTimeAsMicroseconds = self.into();
         dt.unix_microseconds
     }
+
+    pub fn as_date_time(&self) -> DateTimeAsMicroseconds {
+        self.into()
+    }
 }
 
 impl Into<CandleDateKey> for u64 {
