@@ -207,7 +207,7 @@ impl CandlesInstrumentsCache {
         return None;
     }
 
-    pub fn gc_candles(
+    pub fn gc_candles_by_instrument(
         &mut self,
         now: DateTimeAsMicroseconds,
         instrument: &str,
@@ -223,5 +223,21 @@ impl CandlesInstrumentsCache {
         }
 
         None
+    }
+
+    pub fn gc_candles(
+        &mut self,
+        now: DateTimeAsMicroseconds,
+
+        candle_type: CandleType,
+        rotation_period: Duration,
+    ) {
+        for cache in self.bid_candles.values_mut() {
+            cache.gc_by_type(now, candle_type, rotation_period);
+        }
+
+        for cache in self.ask_candles.values_mut() {
+            cache.gc_by_type(now, candle_type, rotation_period);
+        }
     }
 }
