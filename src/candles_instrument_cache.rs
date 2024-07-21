@@ -1,10 +1,11 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    time::Duration,
+};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use crate::{
-    BidOrAsk, CandleData, CandleDateKey, CandleModel, CandleType, CandlesTypesCache, RotateSettings,
-};
+use crate::{BidOrAsk, CandleData, CandleDateKey, CandleModel, CandleType, CandlesCacheByType};
 
 #[derive(Debug, Clone)]
 pub struct CandleToPersist {
@@ -19,17 +20,20 @@ pub struct HandleBidAskChanges {
 }
 
 pub struct CandlesInstrumentsCache {
-    pub bids_candles: BTreeMap<String, CandlesTypesCache>,
-    pub asks_candles: BTreeMap<String, CandlesTypesCache>,
-    pub rotate_settings: RotateSettings,
+    pub bids_candles: BTreeMap<String, CandlesCacheByType>,
+    pub asks_candles: BTreeMap<String, CandlesCacheByType>,
+}
+
+pub struct CleanIntervalParameters {
+    pub from: CandleDateKey,
+    pub to: CandleDateKey,
 }
 
 impl CandlesInstrumentsCache {
-    pub fn new(rotate_settings: RotateSettings) -> Self {
+    pub fn new() -> Self {
         Self {
             bids_candles: BTreeMap::new(),
             asks_candles: BTreeMap::new(),
-            rotate_settings,
         }
     }
 
@@ -39,32 +43,29 @@ impl CandlesInstrumentsCache {
         bid: f64,
         ask: f64,
         time_stamp: DateTimeAsMicroseconds,
+        rotation_period: Option<Duration>,
     ) -> HandleBidAskChanges {
         if !self.bids_candles.contains_key(instrument_id) {
-            self.bids_candles.insert(
-                instrument_id.to_string(),
-                CandlesTypesCache::new(self.rotate_settings.clone()),
-            );
+            self.bids_candles
+                .insert(instrument_id.to_string(), CandlesCacheByType::new());
         }
 
         let bids_to_persist = self
             .bids_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(bid, time_stamp);
+            .handle_new_price(bid, time_stamp, rotation_period);
 
         if !self.asks_candles.contains_key(instrument_id) {
-            self.asks_candles.insert(
-                instrument_id.to_string(),
-                CandlesTypesCache::new(self.rotate_settings.clone()),
-            );
+            self.asks_candles
+                .insert(instrument_id.to_string(), CandlesCacheByType::new());
         }
 
         let asks_to_persist = self
             .asks_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(ask, time_stamp);
+            .handle_new_price(ask, time_stamp, rotation_period);
 
         HandleBidAskChanges {
             bids_to_persist,
@@ -72,7 +73,7 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesTypesCache> {
+    fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesCacheByType> {
         match bid_or_ask {
             BidOrAsk::Bid => &self.bids_candles,
             BidOrAsk::Ask => &self.asks_candles,
@@ -82,7 +83,7 @@ impl CandlesInstrumentsCache {
     fn get_bid_ask_candles_mut(
         &mut self,
         bid_or_ask: BidOrAsk,
-    ) -> &mut BTreeMap<String, CandlesTypesCache> {
+    ) -> &mut BTreeMap<String, CandlesCacheByType> {
         match bid_or_ask {
             BidOrAsk::Bid => &mut self.bids_candles,
             BidOrAsk::Ask => &mut self.asks_candles,
@@ -96,41 +97,51 @@ impl CandlesInstrumentsCache {
         candle_type: CandleType,
         candles_to_init: impl Iterator<Item = CandleModel>,
     ) {
-        let rotate_settings = self.rotate_settings.clone();
         let candles = self.get_bid_ask_candles_mut(bid_or_ask);
 
         for candle_to_init in candles_to_init {
             match candles.get_mut(instrument) {
                 Some(candles) => {
-                    candles.load_candle(instrument, candle_type, candle_to_init);
+                    candles.insert_or_update(candle_type, candle_to_init);
                 }
                 None => {
-                    let mut candles_cache = CandlesTypesCache::new(rotate_settings.clone());
-                    candles_cache.load_candle(instrument, candle_type, candle_to_init);
+                    let mut candles_cache = CandlesCacheByType::new();
+                    candles_cache.insert_or_update(candle_type, candle_to_init);
                     candles.insert(instrument.to_string(), candles_cache);
                 }
             };
         }
     }
 
-    pub fn update_candles(
+    pub fn clean_by_type(
+        &mut self,
+        bid_or_ask: BidOrAsk,
+        instrument_id: &str,
+        candle_type: CandleType,
+    ) {
+        let candles = self.get_bid_ask_candles_mut(bid_or_ask);
+        if let Some(candles) = candles.get_mut(instrument_id) {
+            candles.clean_by_type(candle_type);
+        }
+    }
+
+    pub fn bulk_insert_or_update(
         &mut self,
         bid_or_ask: BidOrAsk,
         instrument: &str,
         candle_type: CandleType,
         candles_to_init: impl Iterator<Item = CandleModel>,
     ) {
-        let rotate_settings = self.rotate_settings.clone();
         let candles = self.get_bid_ask_candles_mut(bid_or_ask);
 
         for candle_to_init in candles_to_init {
             match candles.get_mut(instrument) {
                 Some(candles) => {
-                    candles.load_candle(instrument, candle_type, candle_to_init);
+                    candles.insert_or_update(candle_type, candle_to_init);
                 }
                 None => {
-                    let mut candles_cache = CandlesTypesCache::new(rotate_settings.clone());
-                    candles_cache.load_candle(instrument, candle_type, candle_to_init);
+                    let mut candles_cache = CandlesCacheByType::new();
+                    candles_cache.insert_or_update(candle_type, candle_to_init);
                     candles.insert(instrument.to_string(), candles_cache);
                 }
             };
@@ -144,13 +155,13 @@ impl CandlesInstrumentsCache {
         candle_type: CandleType,
         bid_or_ask: BidOrAsk,
     ) -> Option<CandleModel> {
-        let result = self.get_candles_cache(bid_or_ask).get(instrument);
+        let cache_by_type = self.get_candles_cache(bid_or_ask).get(instrument);
 
-        if result.is_none() {
+        if cache_by_type.is_none() {
             println!("No cache for instrument {}", instrument);
         }
 
-        let result = result.unwrap();
+        let result = cache_by_type.unwrap();
 
         result.get_candle(date_key, candle_type)
     }
@@ -171,14 +182,11 @@ impl CandlesInstrumentsCache {
         &self,
         bid_or_ask: BidOrAsk,
     ) -> HashMap<String, Vec<(CandleType, Vec<CandleModel>)>> {
-        let caches = match bid_or_ask {
-            BidOrAsk::Bid => &self.bids_candles,
-            BidOrAsk::Ask => &self.asks_candles,
-        };
+        let cache_by_type = self.get_candles_cache(bid_or_ask);
 
         let mut result = HashMap::new();
 
-        for (instrument, cache) in caches {
+        for (instrument, cache) in cache_by_type {
             let from_cache = cache.get_all_from_cache();
             result.insert(instrument.to_string(), from_cache);
         }
@@ -191,12 +199,9 @@ impl CandlesInstrumentsCache {
         bid_or_ask: BidOrAsk,
         instrument_id: &str,
     ) -> Option<Vec<(CandleType, Vec<CandleModel>)>> {
-        let caches = match bid_or_ask {
-            BidOrAsk::Bid => &self.bids_candles,
-            BidOrAsk::Ask => &self.asks_candles,
-        };
+        let cache_by_type = self.get_candles_cache(bid_or_ask);
 
-        if let Some(by_instrument) = caches.get(instrument_id) {
+        if let Some(by_instrument) = cache_by_type.get(instrument_id) {
             return Some(by_instrument.get_all_from_cache());
         }
 

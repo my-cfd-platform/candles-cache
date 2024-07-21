@@ -11,6 +11,8 @@ pub enum CandleType {
 }
 
 impl CandleType {
+    pub const ALL_CANDLE_TYPES: [Self; 4] = [Self::Minute, Self::Hour, Self::Day, Self::Month];
+
     pub fn from_u8(value: u8) -> Self {
         match value {
             0 => Self::Minute,
@@ -28,10 +30,6 @@ impl CandleType {
             CandleType::Day => 2u8,
             CandleType::Month => 3u8,
         }
-    }
-
-    pub fn get_all_candle_types() -> Vec<Self> {
-        vec![Self::Minute, Self::Hour, Self::Day, Self::Month]
     }
 
     pub fn verify_date_key(&self, candle_date_key: CandleDateKey) -> Result<(), String> {
@@ -99,6 +97,6 @@ mod tests {
         assert!(CandleType::Day.verify_date_key(candle_date_key).is_err());
         assert!(CandleType::Month.verify_date_key(candle_date_key).is_ok());
 
-        println!("{:?}", CandleType::get_all_candle_types());
+        println!("{:?}", CandleType::ALL_CANDLE_TYPES);
     }
 }
