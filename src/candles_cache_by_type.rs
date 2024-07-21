@@ -104,11 +104,12 @@ impl CandlesCacheByType {
 
     pub fn gc_by_type(
         &mut self,
+        now: DateTimeAsMicroseconds,
         candle_type: CandleType,
         rotation_period: Duration,
     ) -> Option<Vec<CandleModel>> {
         if let Some(candle_type) = self.candles.get_mut(&candle_type.to_u8()) {
-            return candle_type.gc_candles(rotation_period);
+            return candle_type.gc_candles(now, rotation_period);
         }
 
         None

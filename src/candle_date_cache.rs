@@ -71,9 +71,13 @@ impl CandleDateCache {
         }
     }
 
-    pub fn gc_candles(&mut self, rotation_period: Duration) -> Option<Vec<CandleModel>> {
+    pub fn gc_candles(
+        &mut self,
+        now: DateTimeAsMicroseconds,
+        rotation_period: Duration,
+    ) -> Option<Vec<CandleModel>> {
         let mut removed_candles = LazyVec::new();
-        if let Some(ids_to_remove) = self.get_candles_ids_to_rotate(rotation_period) {
+        if let Some(ids_to_remove) = self.get_candles_ids_to_rotate(now, rotation_period) {
             println!(
                 "Rotating {} candles for type: {:?}",
                 ids_to_remove.len(),
@@ -91,8 +95,12 @@ impl CandleDateCache {
         removed_candles.get_result()
     }
 
-    fn get_candles_ids_to_rotate(&self, rotation_period: Duration) -> Option<Vec<u64>> {
-        let max_possible_date = DateTimeAsMicroseconds::now().sub(rotation_period);
+    fn get_candles_ids_to_rotate(
+        &self,
+        now: DateTimeAsMicroseconds,
+        rotation_period: Duration,
+    ) -> Option<Vec<u64>> {
+        let max_possible_date = now.sub(rotation_period);
 
         let key_date = max_possible_date.into_candle_date_key(self.candle_type);
 

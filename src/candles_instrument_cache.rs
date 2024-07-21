@@ -209,6 +209,7 @@ impl CandlesInstrumentsCache {
 
     pub fn gc_candles(
         &mut self,
+        now: DateTimeAsMicroseconds,
         bid_or_ask: BidOrAsk,
         instrument: &str,
         candle_type: CandleType,
@@ -217,7 +218,7 @@ impl CandlesInstrumentsCache {
         let cache = self.get_candles_cache_mut(bid_or_ask);
 
         if let Some(cache) = cache.get_mut(instrument) {
-            return cache.gc_by_type(candle_type, rotation_period);
+            return cache.gc_by_type(now, candle_type, rotation_period);
         }
 
         None
