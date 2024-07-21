@@ -20,8 +20,8 @@ pub struct HandleBidAskChanges {
 }
 
 pub struct CandlesInstrumentsCache {
-    pub bids_candles: BTreeMap<String, CandlesCacheByType>,
-    pub asks_candles: BTreeMap<String, CandlesCacheByType>,
+    pub bid_candles: BTreeMap<String, CandlesCacheByType>,
+    pub ask_candles: BTreeMap<String, CandlesCacheByType>,
 }
 
 pub struct CleanIntervalParameters {
@@ -32,8 +32,8 @@ pub struct CleanIntervalParameters {
 impl CandlesInstrumentsCache {
     pub fn new() -> Self {
         Self {
-            bids_candles: BTreeMap::new(),
-            asks_candles: BTreeMap::new(),
+            bid_candles: BTreeMap::new(),
+            ask_candles: BTreeMap::new(),
         }
     }
 
@@ -44,24 +44,24 @@ impl CandlesInstrumentsCache {
         ask: f64,
         time_stamp: DateTimeAsMicroseconds,
     ) -> HandleBidAskChanges {
-        if !self.bids_candles.contains_key(instrument_id) {
-            self.bids_candles
+        if !self.bid_candles.contains_key(instrument_id) {
+            self.bid_candles
                 .insert(instrument_id.to_string(), CandlesCacheByType::new());
         }
 
         let bids_to_persist = self
-            .bids_candles
+            .bid_candles
             .get_mut(instrument_id)
             .unwrap()
             .handle_new_price(bid, time_stamp);
 
-        if !self.asks_candles.contains_key(instrument_id) {
-            self.asks_candles
+        if !self.ask_candles.contains_key(instrument_id) {
+            self.ask_candles
                 .insert(instrument_id.to_string(), CandlesCacheByType::new());
         }
 
         let asks_to_persist = self
-            .asks_candles
+            .ask_candles
             .get_mut(instrument_id)
             .unwrap()
             .handle_new_price(ask, time_stamp);
@@ -74,8 +74,8 @@ impl CandlesInstrumentsCache {
 
     fn get_candles_cache(&self, bid_or_ask: BidOrAsk) -> &BTreeMap<String, CandlesCacheByType> {
         match bid_or_ask {
-            BidOrAsk::Bid => &self.bids_candles,
-            BidOrAsk::Ask => &self.asks_candles,
+            BidOrAsk::Bid => &self.bid_candles,
+            BidOrAsk::Ask => &self.ask_candles,
         }
     }
 
@@ -84,8 +84,8 @@ impl CandlesInstrumentsCache {
         bid_or_ask: BidOrAsk,
     ) -> &mut BTreeMap<String, CandlesCacheByType> {
         match bid_or_ask {
-            BidOrAsk::Bid => &mut self.bids_candles,
-            BidOrAsk::Ask => &mut self.asks_candles,
+            BidOrAsk::Bid => &mut self.bid_candles,
+            BidOrAsk::Ask => &mut self.ask_candles,
         }
     }
 
@@ -210,14 +210,16 @@ impl CandlesInstrumentsCache {
     pub fn gc_candles(
         &mut self,
         now: DateTimeAsMicroseconds,
-        bid_or_ask: BidOrAsk,
+
         instrument: &str,
         candle_type: CandleType,
         rotation_period: Duration,
     ) -> Option<Vec<CandleModel>> {
-        let cache = self.get_candles_cache_mut(bid_or_ask);
+        if let Some(cache) = self.bid_candles.get_mut(instrument) {
+            return cache.gc_by_type(now, candle_type, rotation_period);
+        }
 
-        if let Some(cache) = cache.get_mut(instrument) {
+        if let Some(cache) = self.ask_candles.get_mut(instrument) {
             return cache.gc_by_type(now, candle_type, rotation_period);
         }
 
