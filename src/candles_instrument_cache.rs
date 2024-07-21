@@ -210,7 +210,6 @@ impl CandlesInstrumentsCache {
     pub fn gc_candles(
         &mut self,
         now: DateTimeAsMicroseconds,
-
         instrument: &str,
         candle_type: CandleType,
         rotation_period: Duration,
