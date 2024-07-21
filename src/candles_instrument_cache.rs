@@ -43,7 +43,6 @@ impl CandlesInstrumentsCache {
         bid: f64,
         ask: f64,
         time_stamp: DateTimeAsMicroseconds,
-        rotation_period: Option<Duration>,
     ) -> HandleBidAskChanges {
         if !self.bids_candles.contains_key(instrument_id) {
             self.bids_candles
@@ -54,7 +53,7 @@ impl CandlesInstrumentsCache {
             .bids_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(bid, time_stamp, rotation_period);
+            .handle_new_price(bid, time_stamp);
 
         if !self.asks_candles.contains_key(instrument_id) {
             self.asks_candles
@@ -65,7 +64,7 @@ impl CandlesInstrumentsCache {
             .asks_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(ask, time_stamp, rotation_period);
+            .handle_new_price(ask, time_stamp);
 
         HandleBidAskChanges {
             bids_to_persist,
@@ -80,7 +79,7 @@ impl CandlesInstrumentsCache {
         }
     }
 
-    fn get_bid_ask_candles_mut(
+    fn get_candles_cache_mut(
         &mut self,
         bid_or_ask: BidOrAsk,
     ) -> &mut BTreeMap<String, CandlesCacheByType> {
@@ -97,7 +96,7 @@ impl CandlesInstrumentsCache {
         candle_type: CandleType,
         candles_to_init: impl Iterator<Item = CandleModel>,
     ) {
-        let candles = self.get_bid_ask_candles_mut(bid_or_ask);
+        let candles = self.get_candles_cache_mut(bid_or_ask);
 
         for candle_to_init in candles_to_init {
             match candles.get_mut(instrument) {
@@ -119,7 +118,7 @@ impl CandlesInstrumentsCache {
         instrument_id: &str,
         candle_type: CandleType,
     ) {
-        let candles = self.get_bid_ask_candles_mut(bid_or_ask);
+        let candles = self.get_candles_cache_mut(bid_or_ask);
         if let Some(candles) = candles.get_mut(instrument_id) {
             candles.clean_by_type(candle_type);
         }
@@ -132,7 +131,7 @@ impl CandlesInstrumentsCache {
         candle_type: CandleType,
         candles_to_init: impl Iterator<Item = CandleModel>,
     ) {
-        let candles = self.get_bid_ask_candles_mut(bid_or_ask);
+        let candles = self.get_candles_cache_mut(bid_or_ask);
 
         for candle_to_init in candles_to_init {
             match candles.get_mut(instrument) {
@@ -206,5 +205,21 @@ impl CandlesInstrumentsCache {
         }
 
         return None;
+    }
+
+    pub fn gc_candles(
+        &mut self,
+        bid_or_ask: BidOrAsk,
+        instrument: &str,
+        candle_type: CandleType,
+        rotation_period: Duration,
+    ) -> Option<Vec<CandleModel>> {
+        let cache = self.get_candles_cache_mut(bid_or_ask);
+
+        if let Some(cache) = cache.get_mut(instrument) {
+            return cache.gc_by_type(candle_type, rotation_period);
+        }
+
+        None
     }
 }

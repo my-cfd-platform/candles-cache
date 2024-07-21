@@ -39,7 +39,6 @@ impl CandlesCacheByType {
         &mut self,
         price: f64,
         price_date: DateTimeAsMicroseconds,
-        rotation_period: Option<Duration>,
     ) -> Vec<CandleToPersist> {
         let mut result = Vec::new();
 
@@ -48,7 +47,7 @@ impl CandlesCacheByType {
 
             let date_key = price_date.into_candle_date_key(candle_type);
 
-            let new_candle_data = cache_data.handle_price(price, date_key, rotation_period);
+            let new_candle_data = cache_data.handle_price(price, date_key);
             result.push(CandleToPersist {
                 date_key,
                 candle_type,
@@ -101,5 +100,17 @@ impl CandlesCacheByType {
 
     pub fn clean_by_type(&mut self, candle_type: CandleType) {
         self.candles.remove(&candle_type.to_u8());
+    }
+
+    pub fn gc_by_type(
+        &mut self,
+        candle_type: CandleType,
+        rotation_period: Duration,
+    ) -> Option<Vec<CandleModel>> {
+        if let Some(candle_type) = self.candles.get_mut(&candle_type.to_u8()) {
+            return candle_type.gc_candles(rotation_period);
+        }
+
+        None
     }
 }

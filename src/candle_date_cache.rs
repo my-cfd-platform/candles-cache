@@ -56,16 +56,7 @@ impl CandleDateCache {
         return result;
     }
 
-    pub fn handle_price(
-        &mut self,
-        price: f64,
-        date_key: CandleDateKey,
-        rotation_period: Option<Duration>,
-    ) -> CandleData {
-        if let Some(rotation_period) = rotation_period {
-            self.gc_candles(rotation_period);
-        }
-
+    pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
         if let Some(candle) = self.candles.get_mut(&date_key.get_value()) {
             candle.data.update_from_price(price, 0.0);
             return candle.data.clone();
@@ -80,7 +71,8 @@ impl CandleDateCache {
         }
     }
 
-    fn gc_candles(&mut self, rotation_period: Duration) {
+    pub fn gc_candles(&mut self, rotation_period: Duration) -> Option<Vec<CandleModel>> {
+        let mut removed_candles = LazyVec::new();
         if let Some(ids_to_remove) = self.get_candles_ids_to_rotate(rotation_period) {
             println!(
                 "Rotating {} candles for type: {:?}",
@@ -88,9 +80,15 @@ impl CandleDateCache {
                 self.candle_type
             );
             for date in ids_to_remove {
-                self.candles.remove(&date);
+                let removed_candle = self.candles.remove(&date);
+
+                if let Some(removed_candle) = removed_candle {
+                    removed_candles.add(removed_candle);
+                }
             }
         }
+
+        removed_candles.get_result()
     }
 
     fn get_candles_ids_to_rotate(&self, rotation_period: Duration) -> Option<Vec<u64>> {
@@ -129,7 +127,7 @@ mod tests {
         let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
         let date_key = now.into_candle_date_key(crate::CandleType::Day);
 
-        cache.handle_price(0.55, date_key, None);
+        cache.handle_price(0.55, date_key);
 
         let mut from = now;
         let mut to = now;
