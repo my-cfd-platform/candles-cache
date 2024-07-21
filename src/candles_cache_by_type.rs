@@ -22,7 +22,7 @@ impl CandlesCacheByType {
         candle_type: CandleType,
     ) -> &mut CandleDateCache {
         let candle_type_as_u8 = candle_type.to_u8();
-        if self.candles.contains_key(&candle_type_as_u8) {
+        if !self.candles.contains_key(&candle_type_as_u8) {
             let result = CandleDateCache::new(candle_type);
             self.candles.insert(candle_type.to_u8(), result);
         }
