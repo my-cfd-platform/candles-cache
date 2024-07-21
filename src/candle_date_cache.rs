@@ -23,20 +23,10 @@ impl CandleDateCache {
         self.candles.insert(date_index.get_value(), model);
     }
 
-    pub fn get_in_date_range(
-        &self,
-        date_from: DateTimeAsMicroseconds,
-        date_to: DateTimeAsMicroseconds,
-    ) -> Vec<CandleModel> {
+    pub fn get_in_date_range(&self, from: CandleDateKey, to: CandleDateKey) -> Vec<CandleModel> {
         let mut candles = Vec::new();
 
-        let date_from = date_from.into_candle_date_key(self.candle_type);
-        let date_to = date_to.into_candle_date_key(self.candle_type);
-
-        for (_, candle) in self
-            .candles
-            .range(date_from.get_value()..=date_to.get_value())
-        {
+        for (_, candle) in self.candles.range(from.get_value()..=to.get_value()) {
             candles.push(candle.clone());
         }
 
@@ -130,10 +120,11 @@ mod tests {
 
     #[test]
     fn test() {
-        let mut cache = CandleDateCache::new(crate::CandleType::Day);
+        let candle_type = crate::CandleType::Day;
+        let mut cache = CandleDateCache::new(candle_type);
 
         let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
-        let date_key = now.into_candle_date_key(crate::CandleType::Day);
+        let date_key = now.into_candle_date_key(candle_type);
 
         cache.handle_price(0.55, date_key);
 
@@ -144,7 +135,10 @@ mod tests {
 
         to.add_days(1);
 
-        let a = cache.get_in_date_range(from, to);
+        let a = cache.get_in_date_range(
+            from.into_candle_date_key(candle_type),
+            to.into_candle_date_key(candle_type),
+        );
 
         let r = a.get(0).unwrap();
 
@@ -157,7 +151,10 @@ mod tests {
 
         to.add_days(2);
 
-        let a = cache.get_in_date_range(from, to);
+        let a = cache.get_in_date_range(
+            from.into_candle_date_key(candle_type),
+            to.into_candle_date_key(candle_type),
+        );
 
         assert_eq!(0, a.len())
     }

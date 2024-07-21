@@ -168,13 +168,13 @@ impl CandlesInstrumentsCache {
     pub fn get_in_date_range(
         &self,
         instrument: &str,
-        date_from: DateTimeAsMicroseconds,
-        date_to: DateTimeAsMicroseconds,
+        from: CandleDateKey,
+        to: CandleDateKey,
         candle_type: CandleType,
         bid_or_ask: BidOrAsk,
     ) -> Option<Vec<CandleModel>> {
         let cache_by_instrument = self.get_candles_cache(bid_or_ask).get(instrument)?;
-        cache_by_instrument.get_in_date_range(date_from, date_to, candle_type)
+        cache_by_instrument.get_in_date_range(from, to, candle_type)
     }
 
     pub fn get_all_from_cache(
