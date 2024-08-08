@@ -69,6 +69,16 @@ impl CandlesCacheByType {
         Some(candles_by_type.get_in_date_range(from, to))
     }
 
+    pub fn get_highest_and_below(
+        &self,
+        candle_type: CandleType,
+        highest: CandleDateKey,
+        amount: usize,
+    ) -> Option<&[CandleModel]> {
+        let candles_by_type = self.candles.get(&(candle_type.to_u8()))?;
+        Some(candles_by_type.get_highest_and_below(highest, amount))
+    }
+
     pub fn get_all_from_cache(&self) -> Vec<(CandleType, Vec<CandleModel>)> {
         let mut result = Vec::new();
 

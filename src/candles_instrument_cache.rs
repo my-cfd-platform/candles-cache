@@ -177,6 +177,18 @@ impl CandlesInstrumentsCache {
         cache_by_instrument.get_in_date_range(from, to, candle_type)
     }
 
+    pub fn get_highest_and_below(
+        &self,
+        bid_or_ask: BidOrAsk,
+        instrument: &str,
+        candle_type: CandleType,
+        highest: CandleDateKey,
+        amount: usize,
+    ) -> Option<&[CandleModel]> {
+        let cache_by_instrument = self.get_candles_cache(bid_or_ask).get(instrument)?;
+        cache_by_instrument.get_highest_and_below(candle_type, highest, amount)
+    }
+
     pub fn get_all_from_cache(
         &self,
         bid_or_ask: BidOrAsk,
