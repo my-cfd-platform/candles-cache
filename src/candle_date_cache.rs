@@ -32,6 +32,11 @@ impl CandleDateCache {
         self.candles.range(from.get_value()..to.get_value())
     }
 
+    pub fn get_highest_and_below(&self, highest: CandleDateKey, amount: usize) -> &[CandleModel] {
+        self.candles
+            .get_highest_and_below_amount(&highest.get_value(), amount)
+    }
+
     pub fn get_all_from_cache(&self) -> Vec<CandleModel> {
         self.candles.as_slice().to_vec()
         /*

@@ -1,7 +1,5 @@
 use crate::CandleDateKey;
 
-use super::candle_date_key_utils::DateTimeComponents;
-
 #[derive(Debug, Clone, Copy)]
 pub enum CandleType {
     Minute = 0,
@@ -33,12 +31,12 @@ impl CandleType {
     }
 
     pub fn verify_date_key(&self, candle_date_key: CandleDateKey) -> Result<(), String> {
-        let c = DateTimeComponents::from_date_key(candle_date_key);
+        let c = candle_date_key.to_date_time_struct();
         match self {
-            CandleType::Minute => c.good_as_minute_key(),
-            CandleType::Hour => c.good_as_hour_key(),
-            CandleType::Day => c.good_as_day_key(),
-            CandleType::Month => c.good_as_month_key(),
+            CandleType::Minute => super::candle_date_key_utils::good_as_minute_key(&c),
+            CandleType::Hour => super::candle_date_key_utils::good_as_hour_key(&c),
+            CandleType::Day => super::candle_date_key_utils::good_as_day_key(&c),
+            CandleType::Month => super::candle_date_key_utils::good_as_month_key(&c),
         }
     }
 }
