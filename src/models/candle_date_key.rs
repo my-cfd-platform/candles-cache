@@ -15,6 +15,10 @@ impl CandleDateKey {
     pub fn get_value(&self) -> u64 {
         self.0
     }
+
+    pub fn as_ref(&self) -> &u64 {
+        &self.0
+    }
 }
 
 impl Into<CandleDateKey> for u64 {

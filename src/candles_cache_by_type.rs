@@ -63,7 +63,7 @@ impl CandlesCacheByType {
         from: CandleDateKey,
         to: CandleDateKey,
         candle_type: CandleType,
-    ) -> Option<Vec<CandleModel>> {
+    ) -> Option<&[CandleModel]> {
         let candles_by_type = self.candles.get(&(candle_type.to_u8()))?;
 
         Some(candles_by_type.get_in_date_range(from, to))

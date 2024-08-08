@@ -1,39 +1,40 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::time::Duration;
 
-use rust_extensions::{date_time::DateTimeAsMicroseconds, lazy::LazyVec};
+use rust_extensions::{date_time::DateTimeAsMicroseconds, lazy::LazyVec, sorted_vec::*};
 
 use crate::{CandleData, CandleDateKey, CandleModel, CandleType, GetCandleDateKey};
 
 pub struct CandleDateCache {
-    pub candles: BTreeMap<u64, CandleModel>,
+    pub candles: SortedVec<u64, CandleModel>,
     pub candle_type: CandleType,
 }
 
 impl CandleDateCache {
     pub fn new(candle_type: CandleType) -> Self {
         Self {
-            candles: BTreeMap::new(),
+            candles: SortedVec::new(),
             candle_type,
         }
     }
 
     pub fn insert_or_update(&mut self, candle_to_load: CandleModel) {
-        let date_index = candle_to_load.get_candle_date_key();
         let model: CandleModel = candle_to_load.into();
-        self.candles.insert(date_index.get_value(), model);
+        match self
+            .candles
+            .insert_or_update(model.get_candle_date_key().as_ref())
+        {
+            InsertOrUpdateEntry::Insert(entry) => entry.insert(model),
+            InsertOrUpdateEntry::Update(entry) => entry.item.data = model.data,
+        }
     }
 
-    pub fn get_in_date_range(&self, from: CandleDateKey, to: CandleDateKey) -> Vec<CandleModel> {
-        let mut candles = Vec::new();
-
-        for (_, candle) in self.candles.range(from.get_value()..=to.get_value()) {
-            candles.push(candle.clone());
-        }
-
-        return candles;
+    pub fn get_in_date_range(&self, from: CandleDateKey, to: CandleDateKey) -> &[CandleModel] {
+        self.candles.range(from.get_value()..to.get_value())
     }
 
     pub fn get_all_from_cache(&self) -> Vec<CandleModel> {
+        self.candles.as_slice().to_vec()
+        /*
         let mut result = vec![];
 
         for (date, candle) in &self.candles {
@@ -44,20 +45,29 @@ impl CandleDateCache {
         }
 
         return result;
+         */
     }
 
     pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
-        if let Some(candle) = self.candles.get_mut(&date_key.get_value()) {
-            candle.data.update_from_price(price, 0.0);
-            return candle.data.clone();
-        } else {
-            let data = CandleData::new_from_price(price, 0.0);
-            let candle = CandleModel {
-                date_key,
-                data: data.clone(),
-            };
-            self.candles.insert(date_key.get_value(), candle.clone());
-            return data;
+        match self.candles.insert_or_update(date_key.as_ref()) {
+            InsertOrUpdateEntry::Insert(entry) => {
+                let data = CandleData::new_from_price(price, 0.0);
+                let candle = CandleModel {
+                    date_key,
+                    data: data.clone(),
+                };
+
+                let result = candle.data.clone();
+
+                entry.insert(candle.clone());
+
+                return result;
+            }
+
+            InsertOrUpdateEntry::Update(entry) => {
+                entry.item.data.update_from_price(price, 0.0);
+                return entry.item.data.clone();
+            }
         }
     }
 
@@ -96,9 +106,10 @@ impl CandleDateCache {
 
         let mut result = LazyVec::new();
 
-        for date in self.candles.keys() {
-            if *date < key_date.get_value() {
-                result.add(date.clone())
+        for candle in self.candles.iter() {
+            let candle_key = candle.date_key.get_value();
+            if candle_key < key_date.get_value() {
+                result.add(candle_key)
             } else {
                 break;
             }

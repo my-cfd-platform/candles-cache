@@ -172,7 +172,7 @@ impl CandlesInstrumentsCache {
         to: CandleDateKey,
         candle_type: CandleType,
         bid_or_ask: BidOrAsk,
-    ) -> Option<Vec<CandleModel>> {
+    ) -> Option<&[CandleModel]> {
         let cache_by_instrument = self.get_candles_cache(bid_or_ask).get(instrument)?;
         cache_by_instrument.get_in_date_range(from, to, candle_type)
     }
