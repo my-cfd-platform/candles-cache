@@ -84,6 +84,10 @@ impl CandleDateCache {
         self.candles.first()
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = &CandleModel> {
+        self.candles.as_slice().iter()
+    }
+
     /*
        fn get_candles_ids_to_rotate(
            &self,

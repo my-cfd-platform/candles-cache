@@ -40,6 +40,10 @@ impl CandlesCacheByType {
         candles_by_type.get_first_candle()
     }
 
+    pub fn iter_all(&self) -> impl Iterator<Item = &CandleModel> {
+        self.candles.values().flat_map(|itm| itm.iter())
+    }
+
     pub fn handle_new_price(
         &mut self,
         price: f64,

@@ -202,6 +202,11 @@ impl CandlesInstrumentsCache {
         return result;
     }
 
+    pub fn iter_all(&self, bid_or_ask: BidOrAsk) -> impl Iterator<Item = &CandleModel> {
+        let cache_by_type = self.get_candles_cache(bid_or_ask);
+        cache_by_type.values().flat_map(|itm| itm.iter_all())
+    }
+
     pub fn get_all_by_instrument(
         &self,
         bid_or_ask: BidOrAsk,
