@@ -35,6 +35,11 @@ impl CandlesCacheByType {
             .insert_or_update(candle)
     }
 
+    pub fn get_first_candle(&self, candle_type: CandleType) -> Option<&CandleModel> {
+        let candles_by_type = self.candles.get(&(candle_type.to_u8()))?;
+        candles_by_type.get_first_candle()
+    }
+
     pub fn handle_new_price(
         &mut self,
         price: f64,

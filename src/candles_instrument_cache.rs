@@ -231,6 +231,18 @@ impl CandlesInstrumentsCache {
         }
     }
 
+    pub fn get_first_candle(
+        &self,
+        bid_or_ask: BidOrAsk,
+        instrument: &str,
+        candle_type: CandleType,
+    ) -> Option<&CandleModel> {
+        let candles_cache = self.get_candles_cache(bid_or_ask);
+
+        let by_instrument = candles_cache.get(instrument)?;
+        by_instrument.get_first_candle(candle_type)
+    }
+
     pub fn gc_candles(&mut self, candle_type: CandleType, max_candles_amount: usize) {
         for cache in self.bid_candles.values_mut() {
             cache.gc_by_type(candle_type, max_candles_amount);

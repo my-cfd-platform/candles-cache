@@ -80,6 +80,10 @@ impl CandleDateCache {
         }
     }
 
+    pub fn get_first_candle(&self) -> Option<&CandleModel> {
+        self.candles.first()
+    }
+
     /*
        fn get_candles_ids_to_rotate(
            &self,
