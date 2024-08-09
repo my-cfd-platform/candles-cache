@@ -44,6 +44,14 @@ impl CandlesCacheByType {
         self.candles.values().flat_map(|itm| itm.iter())
     }
 
+    pub fn iter_by_type(
+        &self,
+        candle_type: CandleType,
+    ) -> Option<impl Iterator<Item = &CandleModel>> {
+        let candles_by_type = self.candles.get(&(candle_type.to_u8()))?;
+        Some(candles_by_type.iter())
+    }
+
     pub fn handle_new_price(
         &mut self,
         price: f64,
