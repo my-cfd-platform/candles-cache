@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
@@ -107,6 +107,25 @@ impl CandlesInstrumentsCache {
                 }
             };
         }
+    }
+
+    pub fn get_instruments(&self) -> HashSet<String> {
+        let mut result = HashSet::new();
+        let candles = self.get_candles_cache(BidOrAsk::Bid);
+
+        for instrument in candles.keys() {
+            result.insert(instrument.to_string());
+        }
+
+        let candles = self.get_candles_cache(BidOrAsk::Ask);
+
+        for instrument in candles.keys() {
+            if !result.contains(instrument) {
+                result.insert(instrument.to_string());
+            }
+        }
+
+        result
     }
 
     pub fn clean_by_type(
