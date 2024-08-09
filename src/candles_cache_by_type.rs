@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
@@ -112,16 +112,9 @@ impl CandlesCacheByType {
         self.candles.remove(&candle_type.to_u8());
     }
 
-    pub fn gc_by_type(
-        &mut self,
-        now: DateTimeAsMicroseconds,
-        candle_type: CandleType,
-        rotation_period: Duration,
-    ) -> Option<Vec<CandleModel>> {
+    pub fn gc_by_type(&mut self, candle_type: CandleType, max_candles_amount: usize) {
         if let Some(candle_type) = self.candles.get_mut(&candle_type.to_u8()) {
-            return candle_type.gc_candles(now, rotation_period);
+            candle_type.gc_candles(max_candles_amount);
         }
-
-        None
     }
 }

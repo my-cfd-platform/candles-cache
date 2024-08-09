@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    time::Duration,
-};
+use std::collections::{BTreeMap, HashMap};
 
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
@@ -221,35 +218,26 @@ impl CandlesInstrumentsCache {
 
     pub fn gc_candles_by_instrument(
         &mut self,
-        now: DateTimeAsMicroseconds,
         instrument: &str,
         candle_type: CandleType,
-        rotation_period: Duration,
-    ) -> Option<Vec<CandleModel>> {
+        max_candles_amount: usize,
+    ) {
         if let Some(cache) = self.bid_candles.get_mut(instrument) {
-            return cache.gc_by_type(now, candle_type, rotation_period);
+            cache.gc_by_type(candle_type, max_candles_amount);
         }
 
         if let Some(cache) = self.ask_candles.get_mut(instrument) {
-            return cache.gc_by_type(now, candle_type, rotation_period);
+            cache.gc_by_type(candle_type, max_candles_amount);
         }
-
-        None
     }
 
-    pub fn gc_candles(
-        &mut self,
-        now: DateTimeAsMicroseconds,
-
-        candle_type: CandleType,
-        rotation_period: Duration,
-    ) {
+    pub fn gc_candles(&mut self, candle_type: CandleType, max_candles_amount: usize) {
         for cache in self.bid_candles.values_mut() {
-            cache.gc_by_type(now, candle_type, rotation_period);
+            cache.gc_by_type(candle_type, max_candles_amount);
         }
 
         for cache in self.ask_candles.values_mut() {
-            cache.gc_by_type(now, candle_type, rotation_period);
+            cache.gc_by_type(candle_type, max_candles_amount);
         }
     }
 }

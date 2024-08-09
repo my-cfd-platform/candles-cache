@@ -1,8 +1,6 @@
-use std::time::Duration;
+use rust_extensions::sorted_vec::*;
 
-use rust_extensions::{date_time::DateTimeAsMicroseconds, lazy::LazyVec, sorted_vec::*};
-
-use crate::{CandleData, CandleDateKey, CandleModel, CandleType, GetCandleDateKey};
+use crate::{CandleData, CandleDateKey, CandleModel, CandleType};
 
 pub struct CandleDateCache {
     pub candles: SortedVec<u64, CandleModel>,
@@ -76,53 +74,36 @@ impl CandleDateCache {
         }
     }
 
-    pub fn gc_candles(
-        &mut self,
-        now: DateTimeAsMicroseconds,
-        rotation_period: Duration,
-    ) -> Option<Vec<CandleModel>> {
-        let mut removed_candles = LazyVec::new();
-        if let Some(ids_to_remove) = self.get_candles_ids_to_rotate(now, rotation_period) {
-            println!(
-                "Rotating {} candles for type: {:?}",
-                ids_to_remove.len(),
-                self.candle_type
-            );
-            for date in ids_to_remove {
-                let removed_candle = self.candles.remove(&date);
-
-                if let Some(removed_candle) = removed_candle {
-                    removed_candles.add(removed_candle);
-                }
-            }
+    pub fn gc_candles(&mut self, max_candles_amount: usize) {
+        while self.candles.len() > max_candles_amount {
+            self.candles.remove_at(0);
         }
-
-        removed_candles.get_result()
     }
 
-    fn get_candles_ids_to_rotate(
-        &self,
-        now: DateTimeAsMicroseconds,
-        rotation_period: Duration,
-    ) -> Option<Vec<u64>> {
-        let max_possible_date = now.sub(rotation_period);
+    /*
+       fn get_candles_ids_to_rotate(
+           &self,
+           now: DateTimeAsMicroseconds,
+           rotation_period: Duration,
+       ) -> Option<Vec<u64>> {
+           let max_possible_date = now.sub(rotation_period);
 
-        let key_date = max_possible_date.into_candle_date_key(self.candle_type);
+           let key_date = max_possible_date.into_candle_date_key(self.candle_type);
 
-        let mut result = LazyVec::new();
+           let mut result = LazyVec::new();
 
-        for candle in self.candles.iter() {
-            let candle_key = candle.date_key.get_value();
-            if candle_key < key_date.get_value() {
-                result.add(candle_key)
-            } else {
-                break;
-            }
-        }
+           for candle in self.candles.iter() {
+               let candle_key = candle.date_key.get_value();
+               if candle_key < key_date.get_value() {
+                   result.add(candle_key)
+               } else {
+                   break;
+               }
+           }
 
-        result.get_result()
-    }
-
+           result.get_result()
+       }
+    */
     pub fn get_candle(&self, date_key: CandleDateKey) -> Option<CandleModel> {
         self.candles.get(&date_key.get_value()).cloned()
     }
