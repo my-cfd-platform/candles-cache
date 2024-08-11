@@ -51,7 +51,16 @@ impl CandleDateCache {
          */
     }
 
-    pub fn handle_price(&mut self, price: f64, date_key: CandleDateKey) -> CandleData {
+    pub fn handle_price(
+        &mut self,
+        price: f64,
+        date_key: CandleDateKey,
+        max_candles_amount: Option<usize>,
+    ) -> CandleData {
+        if let Some(max_candles_amount) = max_candles_amount {
+            self.gc_candles(max_candles_amount);
+        }
+
         match self.candles.insert_or_update(date_key.as_ref()) {
             InsertOrUpdateEntry::Insert(entry) => {
                 let data = CandleData::new_from_price(price, 0.0);
@@ -131,7 +140,7 @@ mod tests {
         let now = DateTimeAsMicroseconds::from_str("2015-01-01T12:12:12").unwrap();
         let date_key = now.into_candle_date_key(candle_type);
 
-        cache.handle_price(0.55, date_key);
+        cache.handle_price(0.55, date_key, None);
 
         let mut from = now;
         let mut to = now;

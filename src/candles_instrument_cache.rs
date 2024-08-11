@@ -40,6 +40,7 @@ impl CandlesInstrumentsCache {
         bid: f64,
         ask: f64,
         time_stamp: DateTimeAsMicroseconds,
+        max_candles_amount: usize,
     ) -> HandleBidAskChanges {
         if !self.bid_candles.contains_key(instrument_id) {
             self.bid_candles
@@ -50,7 +51,7 @@ impl CandlesInstrumentsCache {
             .bid_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(bid, time_stamp);
+            .handle_new_price(bid, time_stamp, max_candles_amount);
 
         if !self.ask_candles.contains_key(instrument_id) {
             self.ask_candles
@@ -61,7 +62,7 @@ impl CandlesInstrumentsCache {
             .ask_candles
             .get_mut(instrument_id)
             .unwrap()
-            .handle_new_price(ask, time_stamp);
+            .handle_new_price(ask, time_stamp, max_candles_amount);
 
         HandleBidAskChanges {
             bids_to_persist,

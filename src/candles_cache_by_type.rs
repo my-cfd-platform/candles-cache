@@ -56,6 +56,7 @@ impl CandlesCacheByType {
         &mut self,
         price: f64,
         price_date: DateTimeAsMicroseconds,
+        max_candles_amount: usize,
     ) -> Vec<CandleToPersist> {
         let mut result = Vec::new();
 
@@ -64,7 +65,8 @@ impl CandlesCacheByType {
 
             let date_key = price_date.into_candle_date_key(candle_type);
 
-            let new_candle_data = cache_data.handle_price(price, date_key);
+            let new_candle_data =
+                cache_data.handle_price(price, date_key, Some(max_candles_amount));
             result.push(CandleToPersist {
                 date_key,
                 candle_type,
