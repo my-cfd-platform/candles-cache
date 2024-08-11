@@ -119,6 +119,27 @@ impl CandlesInstrumentsCache {
         }
     }
 
+    pub fn pre_allocate_memory(
+        &mut self,
+        bid_or_ask: BidOrAsk,
+        instrument_id: &str,
+        candle_type: CandleType,
+        amount: usize,
+    ) {
+        let candles = self.get_candles_cache_mut(bid_or_ask);
+
+        match candles.get_mut(instrument_id) {
+            Some(candles) => {
+                candles.pre_allocate_memory_if_needed(candle_type, amount);
+            }
+            None => {
+                let mut candles_cache = CandlesCacheByType::new();
+                candles_cache.pre_allocate_memory_if_needed(candle_type, amount);
+                candles.insert(instrument_id.to_string(), candles_cache);
+            }
+        };
+    }
+
     pub fn get_instruments(&self) -> HashSet<String> {
         let mut result = HashSet::new();
         let candles = self.get_candles_cache(BidOrAsk::Bid);
