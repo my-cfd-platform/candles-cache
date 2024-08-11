@@ -92,6 +92,33 @@ impl CandleDateKey {
             }
         }
     }
+
+    pub fn get_prev_period_date_key(&self, candle_type: CandleType) -> CandleDateKey {
+        match candle_type {
+            CandleType::Minute => {
+                let mut dt: DateTimeAsMicroseconds = self.into();
+                dt.add_minutes(-1);
+                return dt.into_candle_date_key(candle_type);
+            }
+            CandleType::Hour => {
+                let mut dt: DateTimeAsMicroseconds = self.into();
+                dt.add_hours(-1);
+                return dt.into_candle_date_key(candle_type);
+            }
+            CandleType::Day => {
+                let mut dt: DateTimeAsMicroseconds = self.into();
+                dt.add_days(-1);
+                return dt.into_candle_date_key(candle_type);
+            }
+            CandleType::Month => {
+                let dt: DateTimeAsMicroseconds = self.into();
+                let mut dt: DateTimeStruct = dt.into();
+                dt.dec_month();
+                let dt = dt.to_date_time_as_microseconds().unwrap();
+                return dt.into_candle_date_key(candle_type);
+            }
+        }
+    }
 }
 
 impl Into<CandleDateKey> for u64 {
