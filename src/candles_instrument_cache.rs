@@ -93,16 +93,25 @@ impl CandlesInstrumentsCache {
         instrument: &str,
         candle_type: CandleType,
         candles_to_init: impl Iterator<Item = CandleModel>,
+        pre_allocate_memory: Option<usize>,
     ) {
         let candles = self.get_candles_cache_mut(bid_or_ask);
 
         for candle_to_init in candles_to_init {
             match candles.get_mut(instrument) {
                 Some(candles) => {
+                    if let Some(pre_allocate_memory) = pre_allocate_memory {
+                        candles.pre_allocate_memory_if_needed(candle_type, pre_allocate_memory);
+                    }
+
                     candles.insert_or_update(candle_type, candle_to_init);
                 }
                 None => {
                     let mut candles_cache = CandlesCacheByType::new();
+                    if let Some(pre_allocate_memory) = pre_allocate_memory {
+                        candles_cache
+                            .pre_allocate_memory_if_needed(candle_type, pre_allocate_memory);
+                    }
                     candles_cache.insert_or_update(candle_type, candle_to_init);
                     candles.insert(instrument.to_string(), candles_cache);
                 }

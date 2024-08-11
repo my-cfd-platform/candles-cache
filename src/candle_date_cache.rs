@@ -15,6 +15,12 @@ impl CandleDateCache {
         }
     }
 
+    pub fn pre_allocate_memory_if_needed(&mut self, amount: usize) {
+        if self.candles.capacity() == 0 {
+            self.candles.reserve(amount);
+        }
+    }
+
     pub fn insert_or_update(&mut self, candle_to_load: CandleModel) {
         let model: CandleModel = candle_to_load.into();
         match self

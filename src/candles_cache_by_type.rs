@@ -17,6 +17,11 @@ impl CandlesCacheByType {
         }
     }
 
+    pub fn pre_allocate_memory_if_needed(&mut self, candle_type: CandleType, amount: usize) {
+        self.get_or_create_by_candle_type_mut(candle_type)
+            .pre_allocate_memory_if_needed(amount);
+    }
+
     fn get_or_create_by_candle_type_mut(
         &mut self,
         candle_type: CandleType,
